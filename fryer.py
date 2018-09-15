@@ -1,5 +1,3 @@
-import ctypes
-import weakref
 from io import BytesIO
 from os import remove
 from os.path import isfile, abspath
@@ -10,11 +8,10 @@ from urllib.request import urlretrieve
 
 from PIL import Image
 from PIL import ImageEnhance
-from cffi import FFI
 from cv2 import THRESH_BINARY_INV, RETR_EXTERNAL, THRESH_BINARY, threshold, bitwise_and, getStructuringElement, \
 	dilate, findContours, CHAIN_APPROX_NONE, boundingRect, CascadeClassifier, MORPH_CROSS
 from imageio import get_reader, get_writer, imread
-from numpy import array, random, copy, pi, arctan, abs, sin, arcsin, sum, sqrt, square, int32, zeros
+from numpy import array, random, copy, pi, arctan, abs, sin, arcsin, sum, sqrt, square
 from pyimgur import Imgur
 from telegram.ext.dispatcher import run_async
 
@@ -228,7 +225,6 @@ def __add_emojis(img, m):
 	tmp = img.copy()
 
 	for i in emojis:
-		print(i)
 		emoji = Image.open('Frying/%s.png' % i)
 		for _ in range(int(random.random(1)[0] * m)):
 			coord = random.random(2) * array([img.width, img.height])
