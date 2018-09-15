@@ -346,16 +346,11 @@ def __upload_to_imgur(path, caption):
 	if isfile(path):
 		for _ in range(5):
 			try:
-				print("Connecting")
 				full_path = abspath(path)
 				im.access_token = access_token
 				im.refresh_token = refresh_token
-				print("Connected.")
 				im.upload_image(full_path, title=caption, album='pGXzpH0')
-				print('Removing file...')
-				print(path)
 				remove(path)
-				print('Done.')
 				return
 			except Exception:
 				im.refresh_access_token()
