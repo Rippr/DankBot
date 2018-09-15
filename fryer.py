@@ -147,125 +147,6 @@ def __fry(img, n, e, b, m):
 	return img
 
 
-def __tfry(img):
-	[w, h] = [img.width - 1, img.height - 1]
-	w *= random.random(1)
-	h *= random.random(1)
-	r = int(((img.width + img.height) / 10) * (random.random(1)[0] + 1))
-
-	ffi = FFI()
-	ffi.cdef('''
-	void bulge(int width, int height, int cx, int cy, float r, float a, float h, float ior,
-	int *imgr, int *imgg, int *imgb, int *resr, int *resg, int *resb);
-	''')
-	C = ffi.dlopen("Bulge.dll")
-
-	a = array(img, dtype=int32)
-	ar = a[:, :, 0].flatten()
-	ag = a[:, :, 1].flatten()
-	ab = a[:, :, 2].flatten()
-	br = copy(ar)
-	bg = copy(ag)
-	bb = copy(ab)
-	par = ffi.cast("int*", ar.ctypes.data)
-	pag = ffi.cast("int*", ag.ctypes.data)
-	pab = ffi.cast("int*", ab.ctypes.data)
-	pbr = ffi.cast("int*", br.ctypes.data)
-	pbg = ffi.cast("int*", bg.ctypes.data)
-	pbb = ffi.cast("int*", bb.ctypes.data)
-
-	print("Starting")
-	C.bulge(
-		img.width, img.height, w, h, r,
-		float(2 + random.random(2)[0]), float(4 + 2 + random.random(2)[0]), 1.8,
-		par, pag, pab, pbr, pbg, pbb
-	)
-	print("Returned")
-	b = array([])
-	for i in range(len(pbr)):
-		b.append([br[i], bg[i], bb[i]])
-	b.shape = (img.height, img.width)
-
-	return Image.fromarray(b)
-
-
-def cffry(img):
-	[w, h] = [img.width - 1, img.height - 1]
-	w *= random.random(1)
-	h *= random.random(1)
-	r = int(((img.width + img.height) / 10) * (random.random(1)[0] + 1))
-
-	# ffi = FFI()
-	# ffi.cdef('''
-	# 	void bulge(int width, int height, int cx, int cy, float r, float a, float h, float ior,
-	# 	int *imgr, int *imgg, int *imgb, int *resr, int *resg, int *resb);
-	# 	''')
-	# C = ffi.dlopen("Bulge.dll")
-	C = ctypes.WinDLL("Bulge.dll")
-	f = C.bulge
-	f.argtypes = (
-		ctypes.c_int,
-		ctypes.c_int,
-		ctypes.c_int,
-		ctypes.c_int,
-		ctypes.c_float,
-		ctypes.c_float,
-		ctypes.c_float,
-		ctypes.c_float,
-		ctypes.c_void_p,
-		ctypes.c_void_p,
-		ctypes.c_void_p,
-		ctypes.c_void_p,
-		ctypes.c_void_p,
-		ctypes.c_void_p
-	)
-	f.restype = (None)
-
-	a = array(img, dtype=int32)
-	ar = a[:, :, 0].flatten()
-	ag = a[:, :, 1].flatten()
-	ab = a[:, :, 2].flatten()
-	br = copy(ar)
-	bg = copy(ag)
-	bb = copy(ab)
-	# par = ffi.cast("int*", ar.ctypes.data)
-	# pag = ffi.cast("int*", ag.ctypes.data)
-	# pab = ffi.cast("int*", ab.ctypes.data)
-	# pbr = ffi.cast("int*", br.ctypes.data)
-	# pbg = ffi.cast("int*", bg.ctypes.data)
-	# pbb = ffi.cast("int*", bb.ctypes.data)
-
-	C.bulge(
-		ctypes.c_int(img.width),
-		ctypes.c_int(img.height),
-		ctypes.c_int(w),
-		ctypes.c_int(h),
-		ctypes.c_float(r),
-		ctypes.c_float(float(2 + random.random(2)[0])),
-		ctypes.c_float(float(4 + 2 + random.random(2)[0])),
-		ctypes.c_float(1.8),
-		ctypes.c_void_p(ar.ctypes.data),
-		ctypes.c_void_p(ag.ctypes.data),
-		ctypes.c_void_p(ab.ctypes.data),
-		ctypes.c_void_p(br.ctypes.data),
-		ctypes.c_void_p(bg.ctypes.data),
-		ctypes.c_void_p(bb.ctypes.data)
-	)
-
-	print("Starting")
-	# C.bulge(
-	# 	img.width, img.height, w, h, r, 1.8,
-	# 	par, pag, pab, pbr, pbg, pbb
-	# )
-	print("Returned")
-	b = array([])
-	for i in range(len(br)):
-		b.append([br[i], bg[i], bb[i]])
-	b.shape = (img.height, img.width)
-
-	return Image.fromarray(b)
-
-
 def __find_chars(img):
 	gray = array(img.convert("L"))
 	ret, mask = threshold(gray, 180, 255, THRESH_BINARY)
@@ -343,10 +224,11 @@ def __add_b(img, coords, c):
 
 
 def __add_emojis(img, m):
-	emojis = ['100', 'OK', 'laugh']
+	emojis = ['100', 'OK', 'laugh', 'fire', 'think']
 	tmp = img.copy()
 
 	for i in emojis:
+		print(i)
 		emoji = Image.open('Frying/%s.png' % i)
 		for _ in range(int(random.random(1)[0] * m)):
 			coord = random.random(2) * array([img.width, img.height])
@@ -481,8 +363,3 @@ def __upload_to_imgur(path, caption):
 				return
 			except Exception:
 				im.refresh_access_token()
-
-
-if __name__ == '__main__':
-	a = Image.open('a.png')
-	cffry(a).save('testa.png', 'PNG')
