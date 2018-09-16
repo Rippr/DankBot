@@ -1,0 +1,6 @@
+imageio
+numpy
+opencv-python
+pillow
+pyimgur
+python-telegram-bot
