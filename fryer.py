@@ -58,24 +58,24 @@ def fry_gif(bot, chat_id, url, name, message_id, n, args):
 	e = 2 if args['high-fat'] else 1 if args['no-fat'] else 0
 	b = 0.3 if args['heavy'] else 0.15 if args['light'] else 0
 	m = 6 if args['deep'] else 1 if args['shallow'] else 2
-	print("Starting GIF fry.")
 
 	gifbio = BytesIO()
 	filename = '%s_%s_%s' % (chat_id, name, message_id)
 	filepath = 'temp/' + filename
 	gifbio.name = filename + '.gif'
 	caption = "Requested by %s, %d Cycle(s)" % (name, n)
+	print("Starting.")
 
 	for _ in range(5):
 		try:
+			print("Downloading...")
 			urlretrieve(url, filepath + '.mp4')
-			print("Downloaded file.")
+			print('File downloaded.')
 			reader = get_reader(filepath + '.mp4')
 			fps = reader.get_meta_data()['fps'] if 'fps' in reader.get_meta_data() else 30
 
 			with get_writer(gifbio, format='gif', fps=fps) as writer:
 				for i, img in enumerate(reader):
-					print('Frame: ' + str(i))
 					img = Image.fromarray(img)
 					img = __fry(img, n, e, b, m)
 					bio = BytesIO()
@@ -85,6 +85,7 @@ def fry_gif(bot, chat_id, url, name, message_id, n, args):
 
 					image = imread(bio)
 					writer.append_data(image)
+			print("GIF Fried.")
 
 			gifbio.seek(0)
 			bot.send_document(
@@ -92,18 +93,16 @@ def fry_gif(bot, chat_id, url, name, message_id, n, args):
 				document=gifbio,
 				caption=caption
 			)
-			print("Removing mp4...")
+			print("Sent.")
 			remove(filepath + '.mp4')
-			print("Done")
 			gifbio.seek(0)
-			print("Saving...")
 			with open(filepath + '.gif', 'wb') as f:
 				f.write(gifbio.read())
+			print("Uploading.")
 			__upload_to_imgur(filepath + '.gif', caption)
 			return
 
 		except HTTPError or URLError as e:
-			# print("Error! " + e.)
 			sleep(1)
 
 		except OSError or UnboundLocalError or IndexError:
@@ -132,7 +131,7 @@ def __fry(img, n, e, b, m):
 				array([int(w), int(h)]),
 				r,
 				2 + random.random(2)[0],
-				4 + 2 + random.random(2)[0],
+				6 + random.random(2)[0],
 				1.3 + random.random(1)[0]
 			)
 
@@ -332,16 +331,11 @@ def __add_bulge(img, f, r, a, h, ior):
 
 
 def __upload_to_imgur(path, caption):
-	print("Uploading...")
 	client_id = 'ea567f3b9b802e5'
 	client_key = 'f7021fab37102191bb3c2ec00f6b9541d0be86a4'
 	access_token = 'f3fa0754bbd5f079938040834e4cf23d68fe7104'
 	refresh_token = 'bcb50c6b9f8ce1343774aed388951e6126633b60'
-	print("Getting client")
 	im = Imgur(client_id, client_key)
-	print("Client ready")
-	print(path)
-	print(isfile(path))
 
 	if isfile(path):
 		for _ in range(5):
@@ -351,6 +345,7 @@ def __upload_to_imgur(path, caption):
 				im.refresh_token = refresh_token
 				im.upload_image(full_path, title=caption, album='pGXzpH0')
 				remove(path)
+				print("Done!")
 				return
 			except Exception:
 				im.refresh_access_token()
