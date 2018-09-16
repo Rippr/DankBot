@@ -232,7 +232,7 @@ def __add_emojis(img, m):
 	return tmp
 
 
-def __add_bulge(img, f, r, a, h, ior):
+def __add_bulge(img: Image.Image, f, r, a, h, ior):
 	"""
 	Creates a bulge like distortion to the image
 
@@ -254,6 +254,7 @@ def __add_bulge(img, f, r, a, h, ior):
 
 	width = img.width
 	height = img.height
+	# noinspection PyTypeChecker
 	img_data = array(img)
 
 	if width * height > 9000000:
@@ -333,6 +334,7 @@ def __upload_to_imgur(path, caption):
 
 	if isfile(path):
 		for _ in range(5):
+			# noinspection PyBroadException
 			try:
 				full_path = abspath(path)
 				im.access_token = access_token

@@ -8,6 +8,8 @@ from drake import drake
 from fryer import fry_image, fry_gif
 from jpeg import jpeg
 from vapourize import vapourize
+from generator import generate
+
 
 basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=INFO)
 
@@ -126,6 +128,14 @@ def process(bot, update):
 
 	elif text == '>cookbook':
 		update.message.reply_text(cookbook, parse_mode='Markdown')
+
+	elif 't:' in text and 'b:' in text:
+		t = text.find('t:')
+		b = text.find('b:')
+		if b > t:
+			generate(bot, update, textn[t + 2:b], textn[b + 2:])
+		else:
+			generate(bot, update, textn[t + 2:], textn[b + 2:t])
 
 	elif ', not ' in text:
 		drake(bot, update, textn[text.find(', not ') + 6:], textn[:text.find(', not ')])
