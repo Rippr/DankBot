@@ -64,13 +64,10 @@ def fry_gif(bot, chat_id, url, name, message_id, n, args):
 	filepath = 'temp/' + filename
 	gifbio.name = filename + '.gif'
 	caption = "Requested by %s, %d Cycle(s)" % (name, n)
-	print("Starting.")
 
 	for _ in range(5):
 		try:
-			print("Downloading...")
 			urlretrieve(url, filepath + '.mp4')
-			print('File downloaded.')
 			reader = get_reader(filepath + '.mp4')
 			fps = reader.get_meta_data()['fps'] if 'fps' in reader.get_meta_data() else 30
 
@@ -85,7 +82,6 @@ def fry_gif(bot, chat_id, url, name, message_id, n, args):
 
 					image = imread(bio)
 					writer.append_data(image)
-			print("GIF Fried.")
 
 			gifbio.seek(0)
 			bot.send_document(
@@ -93,12 +89,10 @@ def fry_gif(bot, chat_id, url, name, message_id, n, args):
 				document=gifbio,
 				caption=caption
 			)
-			print("Sent.")
 			remove(filepath + '.mp4')
 			gifbio.seek(0)
 			with open(filepath + '.gif', 'wb') as f:
 				f.write(gifbio.read())
-			print("Uploading.")
 			__upload_to_imgur(filepath + '.gif', caption)
 			return
 
@@ -345,7 +339,6 @@ def __upload_to_imgur(path, caption):
 				im.refresh_token = refresh_token
 				im.upload_image(full_path, title=caption, album='pGXzpH0')
 				remove(path)
-				print("Done!")
 				return
 			except Exception:
 				im.refresh_access_token()
