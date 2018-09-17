@@ -48,22 +48,23 @@ def __get_lines(t):
 def __draw_text(draw, t, y):
 	t = t.strip()
 	w, h = font.getsize(t)
+
 	if w <= 320:
 		draw.text((480 - (w / 2), y - (h / 2)), t, (255, 255, 255), font=font)
+		return True
 
-	else:
-		lines = __get_lines(t)
-		num_lines = len(lines)
-		dims = [font.getsize(x) for x in lines]
-		ws, hs = [x[0] for x in dims], [x[1] for x in dims]
-		total = sum(hs)
+	lines = __get_lines(t)
+	num_lines = len(lines)
+	dims = [font.getsize(x) for x in lines]
+	ws, hs = [x[0] for x in dims], [x[1] for x in dims]
+	total = sum(hs)
 
-		if total > 258:
-			return False
+	if total > 258:
+		return False
 
-		h = y - (total / 2)
-		for i in range(num_lines):
-			draw.text((480 - (ws[i] / 2), h), lines[i], (255, 255, 255), font=font)
-			h += hs[i]
+	h = y - (total / 2)
+	for i in range(num_lines):
+		draw.text((480 - (ws[i] / 2), h), lines[i], (255, 255, 255), font=font)
+		h += hs[i]
 
 	return True
