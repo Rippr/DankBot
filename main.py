@@ -115,6 +115,16 @@ def process(bot, update):
 			return
 
 		elif update.message.reply_to_message.photo:
+
+			if 't:' in text and 'b:' in text:
+				t = text.find('t:')
+				b = text.find('b:')
+				print("Liftoff!")
+				if b > t:
+					generate(bot, update, textn[t + 2:b], textn[b + 2:])
+				else:
+					generate(bot, update, textn[t + 2:], textn[b + 2:t])
+
 			url = bot.get_file(update.message.reply_to_message.photo[::-1][0].file_id).file_path
 			fry_image(
 				bot, chat_id, url, name, message_id,
@@ -128,14 +138,6 @@ def process(bot, update):
 
 	elif text == '>cookbook':
 		update.message.reply_text(cookbook, parse_mode='Markdown')
-
-	elif 't:' in text and 'b:' in text:
-		t = text.find('t:')
-		b = text.find('b:')
-		if b > t:
-			generate(bot, update, textn[t + 2:b], textn[b + 2:])
-		else:
-			generate(bot, update, textn[t + 2:], textn[b + 2:t])
 
 	elif ', not ' in text:
 		drake(bot, update, textn[text.find(', not ') + 6:], textn[:text.find(', not ')])
