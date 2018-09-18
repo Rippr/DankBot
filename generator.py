@@ -121,18 +121,14 @@ def __draw(draw, t, x, y, f):
 
 
 def __get_lines(t, mw, f):
-	print("Getting lines for: ", t, mw)
 	w, _ = fonts[f].getsize(t)
-	print(w)
 	if w <= mw:
 		return [t]
 	if " " not in t:
-		print("Raising error.")
 		raise RuntimeError
 	t = t.split(" ")
 	for i in range(len(t), -1, -1):
 		w, _ = fonts[f].getsize(" ".join(t[:i]))
 		if w <= mw:
 			return [" ".join(t[:i])] + __get_lines(" ".join(t[i:]), mw, f)
-	print("Raising error.")
 	raise RuntimeError
