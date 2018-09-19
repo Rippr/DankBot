@@ -1,17 +1,17 @@
 from io import BytesIO
 from os import remove
-from os.path import isfile, abspath
+from os.path import abspath, isfile
+from random import shuffle
 from time import sleep
 from urllib.error import HTTPError, URLError
-from urllib.request import urlopen
-from urllib.request import urlretrieve
+from urllib.request import urlopen, urlretrieve
 
-from PIL import Image
-from PIL import ImageEnhance
-from cv2 import THRESH_BINARY_INV, RETR_EXTERNAL, THRESH_BINARY, threshold, bitwise_and, getStructuringElement, \
-	dilate, findContours, CHAIN_APPROX_NONE, boundingRect, CascadeClassifier, MORPH_CROSS
-from imageio import get_reader, get_writer, imread
-from numpy import array, random, copy, pi, arctan, abs, sin, arcsin, sum, sqrt, square
+from PIL import Image, ImageEnhance, ImageOps
+from cv2 import CHAIN_APPROX_NONE, CascadeClassifier, MORPH_CROSS, RETR_EXTERNAL, THRESH_BINARY, THRESH_BINARY_INV, \
+	bitwise_and, boundingRect, dilate, findContours, getStructuringElement, threshold
+from imageio import imread, get_reader, get_writer
+from numpy import abs, arcsin, arctan, array, copy, pi, sin, sqrt, square, sum
+from numpy.random import normal, random
 from pyimgur import Imgur
 from telegram.ext.dispatcher import run_async
 
@@ -23,32 +23,24 @@ def fry_image(bot, chat_id, url, name, message_id, n, args):
 
 	e = 4 if args['high-fat'] else 0 if args['no-fat'] else 2.5
 	b = 0.75 if args['heavy'] else 0 if args['light'] else 0.45
-	m = 6 if args['deep'] else 1 if args['shallow'] else 2
+	m = 4 if args['deep'] else 1 if args['shallow'] else 2
 
 	bio = BytesIO()
 	bio.name = filename = '%s_%s_%s.png' % (chat_id, name, message_id)
 	caption = "Requested by %s, %d Cycle(s)" % (name, n)
 
-	for _ in range(5):
-		try:
-			img = Image.open(BytesIO(urlopen(url).read()))
-			img = __fry(img, n, e, b, m)
-			img.save(bio, 'PNG')
-			bio.seek(0)
-			bot.send_photo(
-				chat_id,
-				photo=bio,
-				caption=caption
-			)
-			img.save('temp/' + filename, 'PNG')
-			__upload_to_imgur('temp/' + filename, caption)
-			return
-
-		except HTTPError or URLError:
-			sleep(1)
-
-		except OSError or UnboundLocalError or IndexError:
-			return
+	success, img = __get_image(url)
+	if success:
+		img = __fry(img, n, e, b, m)
+		img.save(bio, 'PNG')
+		bio.seek(0)
+		bot.send_photo(
+			chat_id,
+			photo=bio,
+			caption=caption
+		)
+		img.save('temp/' + filename, 'PNG')
+		__upload_to_imgur('temp/' + filename, caption)
 
 
 @run_async
@@ -57,7 +49,7 @@ def fry_gif(bot, chat_id, url, name, message_id, n, args):
 		return
 	e = 2 if args['high-fat'] else 1 if args['no-fat'] else 0
 	b = 0.3 if args['heavy'] else 0.15 if args['light'] else 0
-	m = 6 if args['deep'] else 1 if args['shallow'] else 2
+	m = 4 if args['deep'] else 1 if args['shallow'] else 2
 
 	gifbio = BytesIO()
 	filename = '%s_%s_%s' % (chat_id, name, message_id)
@@ -65,42 +57,57 @@ def fry_gif(bot, chat_id, url, name, message_id, n, args):
 	gifbio.name = filename + '.gif'
 	caption = "Requested by %s, %d Cycle(s)" % (name, n)
 
+	success, reader = __get_gif_reader(url, filepath)
+	if success:
+		fps = reader.get_meta_data()['fps'] if 'fps' in reader.get_meta_data() else 30
+		with get_writer(gifbio, format='gif', fps=fps) as writer:
+			for i, img in enumerate(reader):
+				img = Image.fromarray(img)
+				img = __fry(img, n, e, b, m)
+				bio = BytesIO()
+				bio.name = filename + '.png'
+				img.save(bio, 'PNG')
+				bio.seek(0)
+
+				image = imread(bio)
+				writer.append_data(image)
+
+		gifbio.seek(0)
+		bot.send_document(
+			chat_id,
+			document=gifbio,
+			caption=caption
+		)
+		remove(filepath + '.mp4')
+		gifbio.seek(0)
+		with open(filepath + '.gif', 'wb') as f:
+			f.write(gifbio.read())
+		__upload_to_imgur(filepath + '.gif', caption)
+
+
+def __get_image(url):
+	for _ in range(5):
+		try:
+			return 1, Image.open(BytesIO(urlopen(url).read()))
+		except HTTPError or URLError:
+			sleep(1)
+		except OSError or UnboundLocalError or IndexError:
+			return 0, None
+	else:
+		return 0, None
+
+
+def __get_gif_reader(url, filepath):
 	for _ in range(5):
 		try:
 			urlretrieve(url, filepath + '.mp4')
-			reader = get_reader(filepath + '.mp4')
-			fps = reader.get_meta_data()['fps'] if 'fps' in reader.get_meta_data() else 30
-
-			with get_writer(gifbio, format='gif', fps=fps) as writer:
-				for i, img in enumerate(reader):
-					img = Image.fromarray(img)
-					img = __fry(img, n, e, b, m)
-					bio = BytesIO()
-					bio.name = filename + '.png'
-					img.save(bio, 'PNG')
-					bio.seek(0)
-
-					image = imread(bio)
-					writer.append_data(image)
-
-			gifbio.seek(0)
-			bot.send_document(
-				chat_id,
-				document=gifbio,
-				caption=caption
-			)
-			remove(filepath + '.mp4')
-			gifbio.seek(0)
-			with open(filepath + '.gif', 'wb') as f:
-				f.write(gifbio.read())
-			__upload_to_imgur(filepath + '.gif', caption)
-			return
-
-		except HTTPError or URLError as e:
+			return 1, get_reader(filepath + '.mp4')
+		except HTTPError or URLError:
 			sleep(1)
-
 		except OSError or UnboundLocalError or IndexError:
-			return
+			return 0, None
+	else:
+		return 0, None
 
 
 def __fry(img, n, e, b, m):
@@ -109,31 +116,31 @@ def __fry(img, n, e, b, m):
 	if coords:
 		img = __add_b(img, coords, e / 20)
 
+	img = __add_emojis(img, n * e)
 	if eyecoords:
 		img = __add_flares(img, eyecoords)
 
+	w, h = img.width - 1, img.height - 1
 	for _ in range(n):
-		img = __add_emojis(img, e)
-
-		if random.random(1)[0] <= b:
-			[w, h] = [img.width - 1, img.height - 1]
-			w *= random.random(1)
-			h *= random.random(1)
-			r = int(((img.width + img.height) / 10) * (random.random(1)[0] + 1))
+		if random(1)[0] <= b:
+			w *= random(1)
+			h *= random(1)
+			r = int(((img.width + img.height) / 10) * (random(1)[0] + 1))
 			img = __add_bulge(
 				img,
 				array([int(w), int(h)]),
 				r,
-				2 + random.random(2)[0],
-				6 + random.random(2)[0],
-				1.3 + random.random(1)[0]
+				2 + random(2)[0],
+				6 + random(2)[0],
+				1.3 + random(1)[0]
 			)
 
-		img = ImageEnhance.Color(img).enhance(1.5 + random.random(m)[0] / 2)
-		img = ImageEnhance.Contrast(img).enhance(1.5 + random.random(m)[0] / 2)
-		img = __add_noise(img, 0.2 + random.random(m)[0] / 20)
-		img = __increase_contrast(img, 150 + random.random(m)[0] * 50)
-
+	fs = [__posterize, __sharpen, __increase_contrast, __colorize]
+	for i in range(n):
+		shuffle(fs)
+		print(i, fs)
+		for f in fs:
+			img = f(img, m)
 	return img
 
 
@@ -174,20 +181,23 @@ def __find_eyes(img):
 	return coords
 
 
-def __increase_contrast(img, level):
-	factor = (259 * (level + 255)) / (255 * (259 - level))
-
-	def contrast(c):
-		return max(0, 128 + factor * (c - 128))
-
-	return img.point(contrast)
+def __posterize(img, p):
+	return ImageOps.posterize(
+		img,
+		3 if p == 4 else 6 if p == 1 else 5
+	)
 
 
-def __add_noise(img, factor):
-	def noise(c):
-		return c * (1 + random.random(1)[0] * factor - factor / 2)
+def __sharpen(img, p):
+	return ImageEnhance.Sharpness(img).enhance((img.width * img.height * p / 3200) ** 0.4)
 
-	return img.point(noise)
+
+def __increase_contrast(img, p):
+	return ImageEnhance.Contrast(img).enhance(normal(1.8, 0.8) * p / 2)
+
+
+def __colorize(img, p):
+	return ImageEnhance.Color(img).enhance(normal(2.5, 1) * p / 2)
 
 
 def __add_flares(img, coords):
@@ -205,7 +215,7 @@ def __add_b(img, coords, c):
 
 	b = Image.open('Frying/B.png')
 	for coord in coords:
-		if random.random(1)[0] < c:
+		if random(1)[0] < c:
 			resized = b.copy()
 			resized.thumbnail((coord[2], coord[3]), Image.ANTIALIAS)
 			tmp.paste(resized, (int(coord[0]), int(coord[1])), resized)
@@ -219,10 +229,10 @@ def __add_emojis(img, m):
 
 	for i in emojis:
 		emoji = Image.open('Frying/%s.png' % i)
-		for _ in range(int(random.random(1)[0] * m)):
-			coord = random.random(2) * array([img.width, img.height])
-			size = int((img.width / 10) * (random.random(1)[0] + 1)) + 1
-			theta = random.random(1)[0] * 360
+		for _ in range(int(random(1)[0] * m)):
+			coord = random(2) * array([img.width, img.height])
+			size = int((img.width / 10) * (random(1)[0] + 1)) + 1
+			theta = random(1)[0] * 360
 
 			resized = emoji.copy()
 			resized = resized.rotate(theta)
