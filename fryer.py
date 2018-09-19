@@ -21,7 +21,7 @@ def fry_image(bot, chat_id, url, name, message_id, n, args):
 	if n == 0:
 		return
 
-	e = 4 if args['high-fat'] else 0 if args['no-fat'] else 2.5
+	e = 2.5 if args['high-fat'] else 0 if args['no-fat'] else 1.5
 	b = 0.75 if args['heavy'] else 0 if args['light'] else 0.45
 	m = 4 if args['deep'] else 1 if args['shallow'] else 2
 
@@ -31,7 +31,14 @@ def fry_image(bot, chat_id, url, name, message_id, n, args):
 
 	success, img = __get_image(url)
 	if success:
-		img = __fry(img, n, e, b, m)
+		img = __fry(img, n, e, b)
+
+		fs = [__posterize, __sharpen, __increase_contrast, __colorize]
+		for i in range(n):
+			shuffle(fs)
+			for f in fs:
+				img = f(img, m)
+
 		img.save(bio, 'PNG')
 		bio.seek(0)
 		bot.send_photo(
@@ -47,7 +54,7 @@ def fry_image(bot, chat_id, url, name, message_id, n, args):
 def fry_gif(bot, chat_id, url, name, message_id, n, args):
 	if n == 0:
 		return
-	e = 2 if args['high-fat'] else 1 if args['no-fat'] else 0
+	e = 1.5 if args['high-fat'] else 1 if args['no-fat'] else 0
 	b = 0.3 if args['heavy'] else 0.15 if args['light'] else 0
 	m = 4 if args['deep'] else 1 if args['shallow'] else 2
 
@@ -60,10 +67,18 @@ def fry_gif(bot, chat_id, url, name, message_id, n, args):
 	success, reader = __get_gif_reader(url, filepath)
 	if success:
 		fps = reader.get_meta_data()['fps'] if 'fps' in reader.get_meta_data() else 30
+		fs = [__posterize, __sharpen, __increase_contrast, __colorize]
+		shuffle(fs)
+
 		with get_writer(gifbio, format='gif', fps=fps) as writer:
 			for i, img in enumerate(reader):
 				img = Image.fromarray(img)
-				img = __fry(img, n, e, b, m)
+				img = __fry(img, n, e, b)
+
+				for _ in range(n):
+					for f in fs:
+						img = f(img, m)
+
 				bio = BytesIO()
 				bio.name = filename + '.png'
 				img.save(bio, 'PNG')
@@ -110,7 +125,7 @@ def __get_gif_reader(url, filepath):
 		return 0, None
 
 
-def __fry(img, n, e, b, m):
+def __fry(img, n, e, b):
 	coords = __find_chars(img)
 	eyecoords = __find_eyes(img)
 	if coords:
@@ -134,13 +149,6 @@ def __fry(img, n, e, b, m):
 				6 + random(2)[0],
 				1.3 + random(1)[0]
 			)
-
-	fs = [__posterize, __sharpen, __increase_contrast, __colorize]
-	for i in range(n):
-		shuffle(fs)
-		print(i, fs)
-		for f in fs:
-			img = f(img, m)
 	return img
 
 
