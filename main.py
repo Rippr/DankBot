@@ -120,7 +120,10 @@ def process(bot, update):
 			url = bot.get_file(update.message.reply_to_message.document.file_id).file_path
 			fry_gif(
 				bot, chat_id, url, name, message_id,
-				5 if 'allah hu akbar' in text else 3 if 'nuk' in text else 1 if 'fry' in text else 0,
+				10 if 'tsar bomba' in text else
+				5 if 'allah hu akbar' in text else
+				3 if 'nuk' in text else
+				1 if 'fry' in text else 0,
 				args
 			)
 			return
@@ -138,7 +141,10 @@ def process(bot, update):
 			url = bot.get_file(update.message.reply_to_message.photo[::-1][0].file_id).file_path
 			fry_image(
 				bot, chat_id, url, name, message_id,
-				5 if 'allah hu akbar' in text else 3 if 'nuk' in text else 1 if 'fry' in text else 0,
+				10 if 'tsar bomba' in text else
+				5 if 'allah hu akbar' in text else
+				3 if 'nuk' in text else
+				1 if 'fry' in text else 0,
 				args
 			)
 			return
