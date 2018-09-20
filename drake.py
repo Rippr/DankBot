@@ -3,6 +3,7 @@ from os.path import join, dirname
 from random import randint
 
 from PIL import Image, ImageDraw, ImageFont
+from numba import jit
 from telegram.ext.dispatcher import run_async
 
 font = ImageFont.truetype(join(dirname(__file__), 'Resources/raleway.ttf'), 32)
@@ -30,6 +31,7 @@ def drake(bot, update, a, b):
 	bot.send_photo(update.message.chat_id, photo=m[1])
 
 
+@jit(fastmath=True)
 def __get_lines(t):
 	w, _ = font.getsize(t)
 	if w <= 320:

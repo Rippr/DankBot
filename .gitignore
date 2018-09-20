@@ -1,8 +1,10 @@
 # Folders to ignore
 Archive/
+temp/
 
 
 # Files to ignore
+!temp/humans.txt
 
 
 # File types to ignore

@@ -6,10 +6,9 @@ from telegram.ext.dispatcher import run_async
 
 from drake import drake
 from fryer import fry_image, fry_gif
+from generator import generate
 from jpeg import jpeg
 from vapourize import vapourize
-from generator import generate
-
 
 basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=INFO)
 
@@ -69,11 +68,12 @@ To invoke, reply to a message containing an image, GIF, or video using one of th
 	a) Deep: High contrast and saturation increase.
 	b) Shallow: Low contrast and saturation increase.
 	
-	c) High-fat: Extra emojis are added.
-	d) No-fat: Emojis aren't added.
+	c) High-fat: Emojis are increased.
+	d) Low-fat: Emojis are reduced.
+	e) No-fat: Emojis aren't added.
 	
-	e) Heavy: Extra bulges are added.
-	f) Light: No bulges are added.
+	f) Heavy: Extra bulges are added.
+	g) Light: No bulges are added.
 
 Also note that emojis and bulges are disabled by default for GIFs/Videos.
 User No-fat/High-fat and Light/Heavy to enable them as needed.
@@ -81,8 +81,19 @@ User No-fat/High-fat and Light/Heavy to enable them as needed.
 
 Use *>commands* to print all commands and *>cookbook* for frying help.
 '''
-keys = ['shallow', 'deep', 'no-fat', 'high-fat', 'light', 'heavy']
+keys = ['shallow', 'deep', 'no-fat', 'low-fat', 'high-fat', 'light', 'heavy']
 cons = 'bcdfghjklmpqrstvwxyz'
+ironic = '''
+Did you ever hear the tragedy of Darth Plagueis The Wise?
+I thought not. It's not a story the Jedi would tell you.
+It's a Sith legend. Darth Plagueis was a Dark Lord of the Sith,
+so powerful and so wise he could use the Force to influence the midichlorians to create life…
+He had such a knowledge of the dark side that he could even keep the ones he cared about from dying.
+The dark side of the Force is a pathway to many abilities some consider to be unnatural. He became so powerful…
+The only thing he was afraid of was losing his power, which eventually, of course, he did.
+Unfortunately, he taught his apprentice everything he knew, then his apprentice killed him in his sleep.
+Ironic. He could save others from death, but not himself.
+'''.replace('\n', ' ')
 nein = [
 	'CgADBAADZ6UAAsYeZAetCRQPjvgluwI',
 	'CgADBAADeQwAAogaZAeD6-H9IcSaswI'
@@ -119,7 +130,6 @@ def process(bot, update):
 			if 't:' in text and 'b:' in text:
 				t = text.find('t:')
 				b = text.find('b:')
-				print("Liftoff!")
 				if b > t:
 					generate(bot, update, textn[t + 2:b], textn[b + 2:])
 				else:
@@ -209,6 +219,9 @@ def process(bot, update):
 
 	elif 'trollface.jpg' in text:
 		bot.send_photo(chat_id, photo='AgADBQADSKgxG389uVTjpi_5Hditdo5C1jIABHUAAb4etY0ouyWIAwABAg')
+
+	elif 'ironic' in text or 'darth plagueis' in text:
+		update.message.reply_text(ironic)
 
 	elif 'thought' in text and 'process' in text:
 		update.message.reply_text('thoughtprocessors.herokuapp.com')

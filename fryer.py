@@ -12,6 +12,7 @@ from cv2 import CHAIN_APPROX_NONE, CascadeClassifier, MORPH_CROSS, RETR_EXTERNAL
 from imageio import imread, get_reader, get_writer
 from numpy import abs, arcsin, arctan, array, copy, pi, sin, sqrt, square, sum
 from numpy.random import normal, random
+from numba import jit
 from pyimgur import Imgur
 from telegram.ext.dispatcher import run_async
 
@@ -21,7 +22,7 @@ def fry_image(bot, chat_id, url, name, message_id, n, args):
 	if n == 0:
 		return
 
-	e = 2.5 if args['high-fat'] else 0 if args['no-fat'] else 1.5
+	e = 3 if args['high-fat'] else 1 if args['low-fat'] else 0 if args['no-fat'] else 2
 	b = 0.75 if args['heavy'] else 0 if args['light'] else 0.45
 	m = 4 if args['deep'] else 1 if args['shallow'] else 2
 
@@ -54,7 +55,7 @@ def fry_image(bot, chat_id, url, name, message_id, n, args):
 def fry_gif(bot, chat_id, url, name, message_id, n, args):
 	if n == 0:
 		return
-	e = 1.5 if args['high-fat'] else 1 if args['no-fat'] else 0
+	e = 1.5 if args['high-fat'] else 1 if args['low-fat'] else 0
 	b = 0.3 if args['heavy'] else 0.15 if args['light'] else 0
 	m = 4 if args['deep'] else 1 if args['shallow'] else 2
 
@@ -125,6 +126,7 @@ def __get_gif_reader(url, filepath):
 		return 0, None
 
 
+@jit(fastmath=True)
 def __fry(img, n, e, b):
 	coords = __find_chars(img)
 	eyecoords = __find_eyes(img)
@@ -152,6 +154,7 @@ def __fry(img, n, e, b):
 	return img
 
 
+@jit(fastmath=True)
 def __find_chars(img):
 	gray = array(img.convert("L"))
 	ret, mask = threshold(gray, 180, 255, THRESH_BINARY)
@@ -172,6 +175,7 @@ def __find_chars(img):
 	return coords
 
 
+@jit(fastmath=True)
 def __find_eyes(img):
 	coords = []
 	face_cascade = CascadeClassifier('Classifiers/haarcascade_frontalface_default.xml')
@@ -189,6 +193,7 @@ def __find_eyes(img):
 	return coords
 
 
+@jit(fastmath=True)
 def __posterize(img, p):
 	return ImageOps.posterize(
 		img,
@@ -196,18 +201,22 @@ def __posterize(img, p):
 	)
 
 
+@jit(fastmath=True)
 def __sharpen(img, p):
 	return ImageEnhance.Sharpness(img).enhance((img.width * img.height * p / 3200) ** 0.4)
 
 
+@jit(fastmath=True)
 def __increase_contrast(img, p):
 	return ImageEnhance.Contrast(img).enhance(normal(1.8, 0.8) * p / 2)
 
 
+@jit(fastmath=True)
 def __colorize(img, p):
 	return ImageEnhance.Color(img).enhance(normal(2.5, 1) * p / 2)
 
 
+@jit(fastmath=True)
 def __add_flares(img, coords):
 	tmp = img.copy()
 
@@ -218,6 +227,7 @@ def __add_flares(img, coords):
 	return tmp
 
 
+@jit(fastmath=True)
 def __add_b(img, coords, c):
 	tmp = img.copy()
 
@@ -231,6 +241,7 @@ def __add_b(img, coords, c):
 	return tmp
 
 
+@jit(fastmath=True)
 def __add_emojis(img, m):
 	emojis = ['100', 'OK', 'laugh', 'fire', 'think']
 	tmp = img.copy()
@@ -250,6 +261,7 @@ def __add_emojis(img, m):
 	return tmp
 
 
+@jit(fastmath=True)
 def __add_bulge(img: Image.Image, f, r, a, h, ior):
 	"""
 	Creates a bulge like distortion to the image
@@ -343,6 +355,7 @@ def __add_bulge(img: Image.Image, f, r, a, h, ior):
 	return img
 
 
+@run_async
 def __upload_to_imgur(path, caption):
 	client_id = 'ea567f3b9b802e5'
 	client_key = 'f7021fab37102191bb3c2ec00f6b9541d0be86a4'
