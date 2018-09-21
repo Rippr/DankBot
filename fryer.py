@@ -10,9 +10,9 @@ from PIL import Image, ImageEnhance, ImageOps
 from cv2 import CHAIN_APPROX_NONE, CascadeClassifier, MORPH_CROSS, RETR_EXTERNAL, THRESH_BINARY, THRESH_BINARY_INV, \
 	bitwise_and, boundingRect, dilate, findContours, getStructuringElement, threshold
 from imageio import imread, get_reader, get_writer
+from numba import jit
 from numpy import abs, arcsin, arctan, array, copy, pi, sin, sqrt, square, sum
 from numpy.random import normal, random
-from numba import jit
 from pyimgur import Imgur
 from telegram.ext.dispatcher import run_async
 

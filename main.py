@@ -190,7 +190,7 @@ def process(bot, update):
 		bot.send_animation(chat_id, animation='CgADBAADBwMAAsYeZAdmUu3cTHKhGwI')
 
 	elif 'do it' in text:
-		print(bot.send_animation(chat_id, animation='CgADBAADgAMAAi4ZZAd8XBGfHNdnhQI'))
+		bot.send_animation(chat_id, animation='CgADBAADgAMAAi4ZZAd8XBGfHNdnhQI')
 
 	elif 'what the' in text:
 		bot.send_photo(chat_id, photo='AgADBQADFagxG64JuVRzEubuAAHg69qMTdUyAAT2Cn1ZV-2hZNOKAwABAg')

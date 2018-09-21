@@ -5,6 +5,7 @@ from urllib.error import HTTPError, URLError
 from urllib.request import urlopen
 
 from PIL import Image, ImageDraw, ImageFont
+from numba import jit
 from telegram.ext.dispatcher import run_async
 
 font_path = join(dirname(__file__), 'Resources/impact.ttf')
@@ -27,11 +28,7 @@ def generate(bot, update, t: str, b: str):
 			w900, h20 = 9 * w, h // 5
 			st, lt = __calculate_size(t, w900, h20)
 			sb, lb = __calculate_size(b, w900, h20)
-			print("Calculated size!")
-			print(st, lt)
-			print(sb, lb)
 			if __draw_top(draw, lt, w, h, st) and __draw_bottom(draw, lb, w, h, sb):
-				print("Done! Sending...")
 				img.save(bio, 'PNG')
 				bio.seek(0)
 				bot.send_photo(
@@ -40,16 +37,15 @@ def generate(bot, update, t: str, b: str):
 					caption="Requested by %s" % update.message.from_user.first_name
 				)
 				return
-			print("Function returned False")
 			return
 		except HTTPError or URLError:
-			print('e')
 			sleep(1)
 
 		except OSError or UnboundLocalError or IndexError:
 			return
 
 
+@jit(fastmath=True)
 def __calculate_size(t, w900, h20):
 	t = t.strip()
 	w90 = w900 // 10
@@ -79,16 +75,11 @@ def __draw_top(draw, lines, w, h, f):
 	font = ImageFont.truetype(font_path, f)
 	num_lines = len(lines)
 	dims = [font.getsize(x) for x in lines]
-	ws, hs = [x[0] for x in dims], [x[1] for x in dims]
-	# total = sum(hs)
-
-	# if total > (h // 4):
-	# 	return False
 
 	y = h // 100
 	for i in range(num_lines):
-		__draw(draw, lines[i], (w - ws[i]) // 2, y, font)
-		y += hs[i]
+		__draw(draw, lines[i], (w - dims[0][i]) // 2, y, font)
+		y += dims[1][i]
 
 	return True
 
@@ -97,16 +88,11 @@ def __draw_bottom(draw, lines, w, h, f):
 	font = ImageFont.truetype(font_path, f)
 	num_lines = len(lines)
 	dims = [font.getsize(x) for x in lines]
-	ws, hs = [x[0] for x in dims], [x[1] for x in dims]
-	# total = sum(hs)
-
-	# if total > (h // 4):
-	# 	return False
 
 	y = (h * 99) // 100
 	for i in range(num_lines - 1, -1, -1):
-		y -= hs[i]
-		__draw(draw, lines[i], (w - ws[i]) // 2, y, font)
+		y -= dims[1][i]
+		__draw(draw, lines[i], (w - dims[0][i]) // 2, y, font)
 
 	return True
 
@@ -119,6 +105,7 @@ def __draw(draw, t, x, y, font):
 	draw.text((x, y), t, (255, 255, 255), font=font)
 
 
+@jit(fastmath=True)
 def __get_lines(t, mw, f):
 	t.strip()
 	w, _ = f.getsize(t)
