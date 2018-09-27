@@ -67,6 +67,7 @@ def fry_gif(bot, chat_id, url, name, message_id, n, args):
 
 	print("Getting file")
 	success, reader = __get_gif_reader(url, filepath)
+	print("Downloaded.")
 	if success:
 		print("Ready")
 		fps = reader.get_meta_data()['fps'] if 'fps' in reader.get_meta_data() else 30
