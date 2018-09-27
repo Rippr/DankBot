@@ -197,7 +197,7 @@ def __find_eyes(img):
 def __posterize(img, p):
 	return ImageOps.posterize(
 		img,
-		3 if p == 4 else 6 if p == 1 else 5
+		4 if p == 4 else 6 if p == 1 else 5
 	)
 
 
@@ -342,7 +342,6 @@ def __add_bulge(img: Image.Image, f, r, a, h, ior):
 				# find intersection point
 				normalized = (f - ray) / sqrt(sum(square(f - ray)))
 				intersect = ray + normalized * k
-				# intersect = ray + __normalise(f - ray) * k
 
 				# assign pixel with ray's coordinates the colour of pixel at intersection
 				if 0 < intersect[0] < width - 1 and 0 < intersect[1] < height - 1:
@@ -375,3 +374,4 @@ def __upload_to_imgur(path, caption):
 				return
 			except Exception:
 				im.refresh_access_token()
+				sleep(10)
