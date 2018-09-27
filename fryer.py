@@ -128,8 +128,10 @@ def __get_gif_reader(url, filepath):
 		except HTTPError or URLError:
 			sleep(1)
 		except OSError or UnboundLocalError or IndexError:
+			print("Error")
 			return 0, None
 	else:
+		print("Quitting loop")
 		return 0, None
 
 
