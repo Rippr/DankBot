@@ -65,11 +65,14 @@ def fry_gif(bot, chat_id, url, name, message_id, n, args):
 	gifbio.name = filename + '.gif'
 	caption = "Requested by %s, %d Cycle(s)" % (name, n)
 
+	print("Getting file")
 	success, reader = __get_gif_reader(url, filepath)
 	if success:
+		print("Ready")
 		fps = reader.get_meta_data()['fps'] if 'fps' in reader.get_meta_data() else 30
 		fs = [__posterize, __sharpen, __increase_contrast, __colorize]
 		shuffle(fs)
+		print("Starting fry.")
 
 		with get_writer(gifbio, format='gif', fps=fps) as writer:
 			for i, img in enumerate(reader):
@@ -87,13 +90,16 @@ def fry_gif(bot, chat_id, url, name, message_id, n, args):
 
 				image = imread(bio)
 				writer.append_data(image)
+		print("Done")
 
 		gifbio.seek(0)
+		print("Sending...")
 		bot.send_document(
 			chat_id,
 			document=gifbio,
 			caption=caption
 		)
+		print("Done!")
 		remove(filepath + '.mp4')
 		gifbio.seek(0)
 		with open(filepath + '.gif', 'wb') as f:
