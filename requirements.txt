@@ -1,4 +1,5 @@
 imageio
+llvmlite
 numba
 numpy
 opencv-python
