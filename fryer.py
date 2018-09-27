@@ -4,6 +4,7 @@ from os.path import abspath, isfile
 from random import shuffle
 from time import sleep
 from urllib.error import HTTPError, URLError
+import traceback
 from urllib.request import urlopen, urlretrieve
 
 from PIL import Image, ImageEnhance, ImageOps
@@ -129,6 +130,7 @@ def __get_gif_reader(url, filepath):
 			sleep(1)
 		except OSError or UnboundLocalError or IndexError:
 			print("Error")
+			traceback.print_exc()
 			return 0, None
 	else:
 		print("Quitting loop")
