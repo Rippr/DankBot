@@ -67,11 +67,11 @@ To invoke, reply to a message containing an image, GIF, or video using one of th
 
 	a) Deep: High contrast and saturation increase.
 	b) Shallow: Low contrast and saturation increase.
-	
+
 	c) High-fat: Emojis are increased.
 	d) Low-fat: Emojis are reduced.
 	e) No-fat: Emojis aren't added.
-	
+
 	f) Heavy: Extra bulges are added.
 	g) Light: No bulges are added.
 
@@ -129,14 +129,22 @@ def process(bot, update):
 			return
 
 		elif update.message.reply_to_message.photo:
+			if ('t:' in text or 'ts:' in text) and ('b:' in text or 'bs:' in text):
+				t, tc = (text.find('t:'), 1) if 't:' in text else (text.find('ts:'), 0)
+				b, bc = (text.find('b:'), 1) if 'b:' in text else (text.find('bs:'), 0)
 
-			if 't:' in text and 'b:' in text:
-				t = text.find('t:')
-				b = text.find('b:')
 				if b > t:
-					generate(bot, update, textn[t + 2:b], textn[b + 2:])
+					generate(
+						bot, update,
+						textn[t + 2:b].upper() if tc else textn[t + 3:b],
+						textn[b + 2:].upper() if bc else textn[b + 3:]
+					)
 				else:
-					generate(bot, update, textn[t + 2:], textn[b + 2:t])
+					generate(
+						bot, update,
+						textn[t + 2:].upper() if tc else textn[t + 3:],
+						textn[b + 2:t].upper() if bc else textn[b + 3:t]
+					)
 
 			url = bot.get_file(update.message.reply_to_message.photo[::-1][0].file_id).file_path
 			fry_image(

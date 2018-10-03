@@ -44,6 +44,7 @@ def generate(bot, update, t: str, b: str):
 		except OSError or UnboundLocalError or IndexError:
 			return
 
+
 def __calculate_size(t, w900, h20):
 	t = t.strip()
 	w90 = w900 // 10
@@ -76,8 +77,8 @@ def __draw_top(draw, lines, w, h, f):
 
 	y = h // 100
 	for i in range(num_lines):
-		__draw(draw, lines[i], (w - dims[0][i]) // 2, y, font)
-		y += dims[1][i]
+		__draw(draw, lines[i], (w - dims[i][0]) // 2, y, font)
+		y += dims[i][1]
 
 	return True
 
@@ -89,8 +90,8 @@ def __draw_bottom(draw, lines, w, h, f):
 
 	y = (h * 99) // 100
 	for i in range(num_lines - 1, -1, -1):
-		y -= dims[1][i]
-		__draw(draw, lines[i], (w - dims[0][i]) // 2, y, font)
+		y -= dims[i][1]
+		__draw(draw, lines[i], (w - dims[i][0]) // 2, y, font)
 
 	return True
 
@@ -107,13 +108,13 @@ def __draw(draw, t, x, y, font):
 def __get_lines(t, mw, f):
 	t.strip()
 	w, _ = f.getsize(t)
-	if w <= mw:
+	if (w <= mw) or (" " not in t):
 		return [t]
-	if " " not in t:
-		raise RuntimeError
+
 	t = t.split(" ")
 	for i in range(len(t), -1, -1):
 		w, _ = f.getsize(" ".join(t[:i]))
 		if w <= mw:
 			return [" ".join(t[:i])] + __get_lines(" ".join(t[i:]), mw, f)
-	raise RuntimeError
+
+	return [t]
