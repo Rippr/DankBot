@@ -44,8 +44,7 @@ def generate(bot, update, t: str, b: str):
 		except OSError or UnboundLocalError or IndexError:
 			return
 
-
-@jit(fastmath=True)
+c
 def __calculate_size(t, w900, h20):
 	t = t.strip()
 	w90 = w900 // 10
