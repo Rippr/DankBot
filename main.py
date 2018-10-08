@@ -15,7 +15,7 @@ basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level
 updater = Updater(
 	token='622347334:AAHDfULc5msN26uc-i9OZ4t98rtfySEfAgM',
 	workers=32,
-	request_kwargs={'read_timeout': 25, 'connect_timeout': 25}
+	request_kwargs={'read_timeout': 60, 'connect_timeout': 60}
 )
 dispatcher = updater.dispatcher
 
@@ -118,6 +118,18 @@ def process(bot, update):
 
 		if update.message.reply_to_message.document:
 			url = bot.get_file(update.message.reply_to_message.document.file_id).file_path
+			fry_gif(
+				bot, chat_id, url, name, message_id,
+				10 if 'tsar bomba' in text else
+				5 if 'allah hu akbar' in text else
+				3 if 'nuk' in text else
+				1 if 'fry' in text else 0,
+				args
+			)
+			return
+
+		if update.message.reply_to_message.video:
+			url = bot.get_file(update.message.reply_to_message.video.file_id).file_path
 			fry_gif(
 				bot, chat_id, url, name, message_id,
 				10 if 'tsar bomba' in text else
