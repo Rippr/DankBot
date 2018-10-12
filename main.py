@@ -1,272 +1,159 @@
-from logging import basicConfig, INFO
-from random import randint
+import configparser
+import json
+from urllib.parse import urlencode
+from urllib.request import urlopen
 
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
-from telegram.ext.dispatcher import run_async
+# standard app engine imports
+# from google.appengine.api import urlfetch
+import webapp2
 
-from drake import drake
-from fryer import fry_image, fry_gif
-from generator import generate
-from jpeg import jpeg
-from vapourize import vapourize
+BASE_URL = ""
+TOKEN = ""
+HOOK_TOKEN = ""
+PROJECT_ID = ""
 
-basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=INFO)
+# Lambda functions to parse updates from Telegram
+getText = lambda update: update["message"]["text"]
+getChatID = lambda update: update["message"]["chat"]["id"]
+getName = lambda update: update["message"]["from"]["first_name"]
 
-updater = Updater(
-	token='622347334:AAHDfULc5msN26uc-i9OZ4t98rtfySEfAgM',
-	workers=32,
-	request_kwargs={'read_timeout': 60, 'connect_timeout': 60}
-)
-dispatcher = updater.dispatcher
-
-commands = '''
-*Basic Commands*
- 1. Hmmmm
- 2. Nein
- 3. Damnnnn
- 4. Allah hu Akbar
- 5. Do it
- 6. What the
- 7. Nigga
- 8. F / RIP
- 9. E
-10. ???
-11. Hello there
-12. I don't think so
-13. Brah wut
-14. Miss me with that gay shit / That's gay
-15. trollface.jpg
-
-*Advanced Commands*
-
-1. ABC, not XYZ
-	Generates a meme using either the Robbie Rotten, Babushka, or Drake template in which ABC is chosen over XYZ.
-
-2. Vapourize:
-	Converts text that follows the colon to Vapourwave text and replies to the request.
-
-3. Alexa / Dankbot play Despacito
-	Sends a GIF of the Despacito music video along with an audio file of bass boosted Despacito.
-	The audio file has a 10% chance of being extremely bass bossted.
+# Accepted commands
+commands = ["/weather", "/fact", "/mirror", "/fortune", "/trivia"]
 
 
-Use *>commands* to print all commands and *>cookbook* for frying help.
-'''
-cookbook = '''
-*Deep Fryer*
-Fries images, GIFs, or videos.
-This includes increasing saturation & contrast, and adding some noise, emojis, lazer eyes, and bulges.
-To invoke, reply to a message containing an image, GIF, or video using one of the following commands:
+# Read settings from configuration file
+def parse_config():
+	global BASE_URL, TOKEN, HOOK_TOKEN, PROJECT_ID
 
-	a) Fry: 1 cycle  of frying.
-	b) Nuke: 3 cycles of frying.
-	c) Allah hu Akbar: 5 cycles of frying.
-	d) Tsar Bomba: 10 cycles of frying.
+	c = configparser.ConfigParser()
+	c.read("config.ini")
+	TOKEN = c.get("Settings", "TOKEN")
+	BASE_URL = "https://api.telegram.org/bot" + TOKEN + "/"
 
-	Additional commands (Include in the same message):
-
-	a) Deep: High contrast and saturation increase.
-	b) Shallow: Low contrast and saturation increase.
-
-	c) High-fat: Emojis are increased.
-	d) Low-fat: Emojis are reduced.
-	e) No-fat: Emojis aren't added.
-
-	f) Heavy: Extra bulges are added.
-	g) Light: No bulges are added.
-
-Also note that emojis and bulges are disabled by default for GIFs/Videos.
-User No-fat/High-fat and Light/Heavy to enable them as needed.
+	HOOK_TOKEN = c.get("Settings", "HOOK_TOKEN")
+	PROJECT_ID = c.get("Settings", "PROJECT_ID")
 
 
-Use *>commands* to print all commands and *>cookbook* for frying help.
-'''
-keys = ['shallow', 'deep', 'no-fat', 'low-fat', 'high-fat', 'light', 'heavy']
-cons = 'bcdfghjklmpqrstvwxyz'
-ironic = '''
-Did you ever hear the tragedy of Darth Plagueis The Wise?
-I thought not. It's not a story the Jedi would tell you.
-It's a Sith legend. Darth Plagueis was a Dark Lord of the Sith,
-so powerful and so wise he could use the Force to influence the midichlorians to create life…
-He had such a knowledge of the dark side that he could even keep the ones he cared about from dying.
-The dark side of the Force is a pathway to many abilities some consider to be unnatural. He became so powerful…
-The only thing he was afraid of was losing his power, which eventually, of course, he did.
-Unfortunately, he taught his apprentice everything he knew, then his apprentice killed him in his sleep.
-Ironic. He could save others from death, but not himself.
-'''.replace('\n', ' ')
-nein = [
-	'CgADBAADZ6UAAsYeZAetCRQPjvgluwI',
-	'CgADBAADeQwAAogaZAeD6-H9IcSaswI'
-]
+# Set requests timeout (default is 15)
+def set_timeout(numSec=60):
+	# urlfetch.set_default_fetch_deadline(numSec)
+	pass
 
 
-@run_async
-def start(bot, update):
-	bot.send_message(chat_id=update.message.chat_id, parse_mode='Markdown', text='*This is RipprBot!*\n' + commands)
+# Deserialise object and serialise it to JSON formatted string
+def format_resp(obj):
+	parsed = json.load(obj)
+	return json.dumps(parsed, indent=4, sort_keys=True)
 
 
-@run_async
-def process(bot, update):
-	textn = update.message.text
-	text = textn.lower()
-	chat_id = update.message.chat_id
-	message_id = update.message.message_id
+# Make a request and get JSON response
+def make_request(url):
+	r = urlopen(url)
+	resp = json.load(r)
+	return resp
 
-	if update.message.reply_to_message:
-		args = {key: 1 if key in text else 0 for key in keys}
-		name = update.message.from_user.first_name
 
-		if update.message.reply_to_message.document:
-			url = bot.get_file(update.message.reply_to_message.document.file_id).file_path
-			fry_gif(
-				bot, chat_id, url, name, message_id,
-				10 if 'tsar bomba' in text else
-				5 if 'allah hu akbar' in text else
-				3 if 'nuk' in text else
-				1 if 'fry' in text else 0,
-				args
-			)
+# Build a one-time keyboard for on-screen options
+def build_keyboard(items):
+	keyboard = [[{"text": item}] for item in items]
+	replyKeyboard = {"keyboard": keyboard, "one_time_keyboard": True}
+	return json.dumps(replyKeyboard)
+
+
+# Send URL-encoded message to chat id
+def send_message(text, chatId, interface=None):
+	params = {
+		"chat_id": str(chatId),
+		"text": text.encode("utf-8"),
+		"parse_mode": "Markdown",
+	}
+	if interface:
+		params["reply_markup"] = interface
+
+	urlopen(BASE_URL + "sendMessage", urlencode(params)).read()
+
+
+# Return basic information about the bot
+class MeHandler(webapp2.RequestHandler):
+	def get(self):
+		set_timeout()
+		parse_config()
+
+		url = BASE_URL + "getMe"
+		respBuf = urlopen(url)
+
+		self.response.headers["Content-Type"] = "text/plain"
+		self.response.write(format_resp(respBuf))
+
+
+# Get information about webhook status
+class GetWebhookHandler(webapp2.RequestHandler):
+	def get(self):
+		set_timeout()
+		parse_config()
+
+		url = BASE_URL + "getWebhookInfo"
+		respBuf = urlopen(url)
+
+		self.response.headers["Content-Type"] = "text/plain"
+		self.response.write(format_resp(respBuf))
+
+
+# Set a webhook url for Telegram to POST to
+class SetWebhookHandler(webapp2.RequestHandler):
+	def get(self):
+		set_timeout()
+		parse_config()
+
+		hookUrl = "https://%s.appspot.com/TG%s" % (PROJECT_ID, HOOK_TOKEN)
+		respBuf = urlopen(BASE_URL + "setWebhook", urlencode({
+			"url": hookUrl
+		}))
+		self.response.headers["Content-Type"] = "text/plain"
+		self.response.write(format_resp(respBuf))
+
+
+# Remove webhook integration
+class DeleteWebhookHandler(webapp2.RequestHandler):
+	def get(self):
+		set_timeout()
+		parse_config()
+
+		url = BASE_URL + "deleteWebhook"
+		respBuf = urlopen(url)
+
+		self.response.headers["Content-Type"] = "text/plain"
+		self.response.write(format_resp(respBuf))
+
+
+# Handler for the webhook, called by Telegram
+class WebhookHandler(webapp2.RequestHandler):
+	def post(self):
+		set_timeout()
+		parse_config()
+
+		if HOOK_TOKEN not in self.request.url:
+			# Not coming from Telegram
 			return
 
-		if update.message.reply_to_message.video:
-			url = bot.get_file(update.message.reply_to_message.video.file_id).file_path
-			fry_gif(
-				bot, chat_id, url, name, message_id,
-				10 if 'tsar bomba' in text else
-				5 if 'allah hu akbar' in text else
-				3 if 'nuk' in text else
-				1 if 'fry' in text else 0,
-				args
-			)
+		body = json.loads(self.request.body)
+
+		chatId = getChatID(body)
+
+		try:
+			text = getText(body)
+		except Exception:
 			return
 
-		elif update.message.reply_to_message.photo:
-			if ('t:' in text or 'ts:' in text) and ('b:' in text or 'bs:' in text):
-				t, tc = (text.find('t:'), 1) if 't:' in text else (text.find('ts:'), 0)
-				b, bc = (text.find('b:'), 1) if 'b:' in text else (text.find('bs:'), 0)
-
-				if b > t:
-					generate(
-						bot, update,
-						textn[t + 2:b].upper() if tc else textn[t + 3:b],
-						textn[b + 2:].upper() if bc else textn[b + 3:]
-					)
-				else:
-					generate(
-						bot, update,
-						textn[t + 2:].upper() if tc else textn[t + 3:],
-						textn[b + 2:t].upper() if bc else textn[b + 3:t]
-					)
-
-			url = bot.get_file(update.message.reply_to_message.photo[::-1][0].file_id).file_path
-			fry_image(
-				bot, chat_id, url, name, message_id,
-				10 if 'tsar bomba' in text else
-				5 if 'allah hu akbar' in text else
-				3 if 'nuk' in text else
-				1 if 'fry' in text else 0,
-				args
-			)
-			return
-
-	if text == '>commands':
-		update.message.reply_text(commands, parse_mode='Markdown')
-
-	elif text == '>cookbook':
-		update.message.reply_text(cookbook, parse_mode='Markdown')
-
-	elif ', not ' in text:
-		drake(bot, update, textn[text.find(', not ') + 6:], textn[:text.find(', not ')])
-
-	elif (update.message.reply_to_message and 'needs' in text and 'jpeg' in text):
-		if 'moar' in text:
-			jpeg(bot, update, m=2)
-		elif 'more' in text:
-			jpeg(bot, update, n=3)
-		else:
-			jpeg(bot, update)
-
-	elif 'vapourize:' in text:
-		vapourize(update, textn[text.find('vapourize:') + 10:])
-
-	elif 'alexa play despacito' in text or 'dankbot play despacito' in text:
-		bot.send_animation(chat_id, animation='CgADBAADnI4AAmQbZAdH9Tn08dZ_3QI')
-		r = randint(0, 9)
-		if r:
-			bot.send_audio(chat_id, audio='CQADBQADKwADfz25VCqQqUxbbzAhAg')
-		else:
-			bot.send_audio(chat_id, audio='CQADBQADLAADfz25VH7xA8whBn5dAg')
-
-	elif 'hmmm' in text:
-		bot.send_animation(chat_id, animation='CgADBAADCQAD3nJNU7_HSzR8J2dtAg')
-
-	elif 'nein' in text:
-		bot.send_animation(chat_id, animation=nein[randint(0, len(nein) - 1)])
-
-	elif 'damnnnn' in text:
-		bot.send_animation(chat_id, animation='CgADBAADR4YAApccZAczUrsyn-rCxwI')
-
-	elif 'allah hu akbar' in text:
-		bot.send_animation(chat_id, animation='CgADBAADBwMAAsYeZAdmUu3cTHKhGwI')
-
-	elif 'do it' in text:
-		bot.send_animation(chat_id, animation='CgADBAADgAMAAi4ZZAd8XBGfHNdnhQI')
-
-	elif 'what the' in text:
-		bot.send_photo(chat_id, photo='AgADBQADFagxG64JuVRzEubuAAHg69qMTdUyAAT2Cn1ZV-2hZNOKAwABAg')
-
-	elif 'nigga' in text:
-		update.message.reply_text(
-			' '.join(
-				['🅱️' + x[1:] if x[0].lower() in cons else x for x in textn.split(' ')]
-			).replace('g', '🅱️').replace('G', '🅱️')
-		)
-
-	elif text == 'f' or text == 'rip':
-		update.message.reply_text('F')
-
-	elif text == 'e':
-		bot.send_photo(chat_id, photo='AgADBQADSagxG389uVRUovuo9tiKqXcx1TIABKmTrdCdaEhPGJcDAAEC')
-
-	elif text == '???':
-		update.message.reply_text('Profit')
-
-	elif 'hello there' in text:
-		bot.send_photo(chat_id, photo='AgADBQADFqgxG64JuVTQ1tqZIfI0TDud1jIABGS5QBh2gsTA9BcCAAEC')
-
-	elif 'i don\'t think so' in text or 'i dont think so' in text:
-		bot.send_photo(chat_id, photo='AgADBQADF6gxG64JuVRIBsd4VngPrJ811TIABLOsd7lIp3ZiLpcDAAEC')
-
-	elif 'brah wut' in text:
-		bot.send_photo(chat_id, photo='AgADBQADRqgxG389uVR8GFE_Qj2BeeVC1jIABJIP9HL4D6o0uI8DAAEC')
-
-	elif 'miss me with that gay shit' in text or 'thats gay' in text or 'that\'s gay' in text:
-		bot.send_photo(chat_id, photo='AgADBQADR6gxG389uVT3fIg296WSGNoq1TIABOE4WXAwEZLBxpYDAAEC')
-
-	elif 'trollface.jpg' in text:
-		bot.send_photo(chat_id, photo='AgADBQADSKgxG389uVTjpi_5Hditdo5C1jIABHUAAb4etY0ouyWIAwABAg')
-
-	elif 'ironic' in text or 'darth plagueis' in text:
-		update.message.reply_text(ironic)
-
-	elif 'thought' in text and 'process' in text:
-		update.message.reply_text('thoughtprocessors.herokuapp.com')
-
-	elif 'tp' in text:
-		update.message.reply_text(
-			textn.replace('TP', '✝️🅿️').replace('tp', '✝️🅿️').replace('tP', '✝️🅿️').replace('Tp', '✝️🅿️')
-		)
-
-	elif 'jainil' in text:
-		update.message.reply_text('ヽ(◉◡◔)ﾉ  i\'M jAiNiL aNd I iS aUtIsTiC. ヽ(◉◡◔)ﾉ')
-
-	else:
-		print(update.message.text)
+		if text == "/start":
+			keyboard = build_keyboard(commands)
+			send_message("Hello %s! Why not try the commands below:" % getName(body), chatId, keyboard)
 
 
-start_handler = CommandHandler('start', start)
-message_handler = MessageHandler(Filters.text, process)
-dispatcher.add_handler(start_handler)
-dispatcher.add_handler(message_handler)
-
-updater.start_polling()
+app = webapp2.WSGIApplication([
+	('/me', MeHandler),
+	('/set_webhook', SetWebhookHandler),
+	('/get_webhook', GetWebhookHandler),
+	('/del_webhook', DeleteWebhookHandler),
+	(r'/TG.*', WebhookHandler),
+], debug=True)

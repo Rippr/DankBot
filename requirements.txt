@@ -6,3 +6,4 @@ opencv-python
 pillow
 pyimgur
 python-telegram-bot
+webapp2
