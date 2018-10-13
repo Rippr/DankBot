@@ -1,4 +1,3 @@
-from logging import basicConfig, INFO
 from random import randint
 
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
@@ -10,7 +9,6 @@ from generator import generate
 from jpeg import jpeg
 from vapourize import vapourize
 
-basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=INFO)
 
 updater = Updater(
 	token='622347334:AAHDfULc5msN26uc-i9OZ4t98rtfySEfAgM',
