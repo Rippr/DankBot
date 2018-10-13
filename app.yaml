@@ -1,7 +1,8 @@
-#application: dankbot-dankbot
-#version: 1
+application: dankbot-dankbot
+version: 1
 runtime: python37
 api_version: 1
+threadsafe: yes
 
 handlers:
 -   url: /set_webhook
@@ -11,8 +12,8 @@ handlers:
 -   url: .*
     script: main.app
 
-#libraries:
-#-   name: webapp2
-#    version: "2.5.2"
-#-   name: PIL
-#    version: latest
+libraries:
+-   name: webapp2
+    version: "2.5.2"
+-   name: PIL
+    version: latest
