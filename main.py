@@ -109,6 +109,7 @@ def process(bot, update):
 	text = textn.lower()
 	chat_id = update.message.chat_id
 	message_id = update.message.message_id
+	print(update.message.reply_to_message)
 
 	if update.message.reply_to_message:
 		args = {key: 1 if key in text else 0 for key in keys}
@@ -126,9 +127,23 @@ def process(bot, update):
 			)
 			return
 
-		if update.message.reply_to_message.video:
+		elif update.message.reply_to_message.video:
 			url = bot.get_file(update.message.reply_to_message.video.file_id).file_path
 			fry_gif(
+				bot, chat_id, url, name, message_id,
+				10 if 'tsar bomba' in text else
+				5 if 'allah hu akbar' in text else
+				3 if 'nuk' in text else
+				1 if 'fry' in text else 0,
+				args
+			)
+			return
+
+		elif update.message.reply_to_message.sticker:
+			print("Attempting to fry")
+			url = bot.get_file(update.message.reply_to_message.sticker.file_id).file_path
+			print("Url retrieved.")
+			fry_image(
 				bot, chat_id, url, name, message_id,
 				10 if 'tsar bomba' in text else
 				5 if 'allah hu akbar' in text else

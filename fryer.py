@@ -31,7 +31,11 @@ def fry_image(bot, chat_id, url, name, message_id, n, args):
 	caption = "Requested by %s, %d Cycle(s)" % (name, n)
 
 	success, img = __get_image(url)
+	print("Image downloaded", url)
 	if success:
+		print("Conf")
+		img = img.tobitmap()
+		print(type(img))
 		img = __fry(img, n, e, b)
 
 		fs = [__posterize, __sharpen, __increase_contrast, __colorize]
@@ -39,6 +43,7 @@ def fry_image(bot, chat_id, url, name, message_id, n, args):
 			shuffle(fs)
 			for f in fs:
 				img = f(img, m)
+		print("Fried")
 
 		img.save(bio, 'PNG')
 		bio.seek(0)
