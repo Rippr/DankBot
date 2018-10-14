@@ -9,7 +9,6 @@ from generator import generate
 from jpeg import jpeg
 from vapourize import vapourize
 
-
 updater = Updater(
 	token='622347334:AAHDfULc5msN26uc-i9OZ4t98rtfySEfAgM',
 	workers=32,
@@ -48,7 +47,7 @@ commands = '''
 	The audio file has a 10% chance of being extremely bass bossted.
 
 
-Use *>commands* to print all commands and *>cookbook* for frying help.
+Use */commands* to print all commands and */cookbook* for frying help.
 '''
 cookbook = '''
 *Deep Fryer*
@@ -77,10 +76,10 @@ Also note that emojis and bulges are disabled by default for GIFs/Videos.
 User No-fat/High-fat and Light/Heavy to enable them as needed.
 
 
-Use *>commands* to print all commands and *>cookbook* for frying help.
+Use */commands* to print all commands and */cookbook* for frying help.
 '''
 keys = ['shallow', 'deep', 'no-fat', 'low-fat', 'high-fat', 'light', 'heavy']
-cons = 'bcdfghjklmpqrstvwxyz'
+cons = 'bcdfghjklmnpqrstvwxyz'
 ironic = '''
 Did you ever hear the tragedy of Darth Plagueis The Wise?
 I thought not. It's not a story the Jedi would tell you.
@@ -96,11 +95,76 @@ nein = [
 	'CgADBAADZ6UAAsYeZAetCRQPjvgluwI',
 	'CgADBAADeQwAAogaZAeD6-H9IcSaswI'
 ]
+exbuded = ['a', 'an', 'and', 'if', 'the']
 
 
 @run_async
-def start(bot, update):
+def start_handler(bot, update):
 	bot.send_message(chat_id=update.message.chat_id, parse_mode='Markdown', text='*This is RipprBot!*\n' + commands)
+
+
+@run_async
+def help_handler(bot, update):
+	bot.send_message(chat_id=update.message.chat_id, parse_mode='Markdown', text=commands)
+
+
+@run_async
+def cookbook_handler(bot, update):
+	bot.send_message(chat_id=update.message.chat_id, parse_mode='Markdown', text=cookbook)
+
+
+def handle_reply(bot, update):
+	textn = update.message.text
+	text = textn.lower()
+	name = update.message.from_user.first_name
+	chat_id = update.message.chat_id
+	message_id = update.message.message_id
+
+	n = (10 if 'tsar bomba' in text else
+	     5 if 'allah hu akbar' in text else
+	     3 if 'nuk' in text else
+	     1 if 'fry' in text else 0)
+
+	if n:
+		args = {key: 1 if key in text else 0 for key in keys}
+		if update.message.reply_to_message.document:
+			url = bot.get_file(update.message.reply_to_message.document.file_id).file_path
+			fry_gif(bot, chat_id, url, name, message_id, n, args)
+			return 1
+
+		elif update.message.reply_to_message.video:
+			url = bot.get_file(update.message.reply_to_message.video.file_id).file_path
+			fry_gif(bot, chat_id, url, name, message_id, n, args)
+			return 1
+
+		# elif update.message.reply_to_message.sticker:
+		# 	url = bot.get_file(update.message.reply_to_message.sticker.file_id).file_path
+		# 	fry_image(bot, chat_id, url, name, message_id, n, args)
+		# 	return 1
+
+		elif update.message.reply_to_message.photo:
+			url = bot.get_file(update.message.reply_to_message.photo[::-1][0].file_id).file_path
+			fry_image(bot, chat_id, url, name, message_id, n, args)
+			return 1
+
+	elif ('t:' in text or 'ts:' in text) and ('b:' in text or 'bs:' in text):
+		t, tc = (text.find('t:'), 1) if 't:' in text else (text.find('ts:'), 0)
+		b, bc = (text.find('b:'), 1) if 'b:' in text else (text.find('bs:'), 0)
+
+		if b > t:
+			generate(
+				bot, update,
+				textn[t + 2:b].upper() if tc else textn[t + 3:b],
+				textn[b + 2:].upper() if bc else textn[b + 3:]
+			)
+		else:
+			generate(
+				bot, update,
+				textn[t + 2:].upper() if tc else textn[t + 3:],
+				textn[b + 2:t].upper() if bc else textn[b + 3:t]
+			)
+		return 1
+	return 0
 
 
 @run_async
@@ -108,90 +172,17 @@ def process(bot, update):
 	textn = update.message.text
 	text = textn.lower()
 	chat_id = update.message.chat_id
-	message_id = update.message.message_id
-	print(update.message.reply_to_message)
 
 	if update.message.reply_to_message:
-		args = {key: 1 if key in text else 0 for key in keys}
-		name = update.message.from_user.first_name
-
-		if update.message.reply_to_message.document:
-			url = bot.get_file(update.message.reply_to_message.document.file_id).file_path
-			fry_gif(
-				bot, chat_id, url, name, message_id,
-				10 if 'tsar bomba' in text else
-				5 if 'allah hu akbar' in text else
-				3 if 'nuk' in text else
-				1 if 'fry' in text else 0,
-				args
-			)
+		if handle_reply(bot, update):
 			return
-
-		elif update.message.reply_to_message.video:
-			url = bot.get_file(update.message.reply_to_message.video.file_id).file_path
-			fry_gif(
-				bot, chat_id, url, name, message_id,
-				10 if 'tsar bomba' in text else
-				5 if 'allah hu akbar' in text else
-				3 if 'nuk' in text else
-				1 if 'fry' in text else 0,
-				args
-			)
-			return
-
-		elif update.message.reply_to_message.sticker:
-			print("Attempting to fry")
-			url = bot.get_file(update.message.reply_to_message.sticker.file_id).file_path
-			print("Url retrieved.")
-			fry_image(
-				bot, chat_id, url, name, message_id,
-				10 if 'tsar bomba' in text else
-				5 if 'allah hu akbar' in text else
-				3 if 'nuk' in text else
-				1 if 'fry' in text else 0,
-				args
-			)
-			return
-
-		elif update.message.reply_to_message.photo:
-			if ('t:' in text or 'ts:' in text) and ('b:' in text or 'bs:' in text):
-				t, tc = (text.find('t:'), 1) if 't:' in text else (text.find('ts:'), 0)
-				b, bc = (text.find('b:'), 1) if 'b:' in text else (text.find('bs:'), 0)
-
-				if b > t:
-					generate(
-						bot, update,
-						textn[t + 2:b].upper() if tc else textn[t + 3:b],
-						textn[b + 2:].upper() if bc else textn[b + 3:]
-					)
-				else:
-					generate(
-						bot, update,
-						textn[t + 2:].upper() if tc else textn[t + 3:],
-						textn[b + 2:t].upper() if bc else textn[b + 3:t]
-					)
-
-			url = bot.get_file(update.message.reply_to_message.photo[::-1][0].file_id).file_path
-			fry_image(
-				bot, chat_id, url, name, message_id,
-				10 if 'tsar bomba' in text else
-				5 if 'allah hu akbar' in text else
-				3 if 'nuk' in text else
-				1 if 'fry' in text else 0,
-				args
-			)
-			return
-
-	if text == '>commands':
-		update.message.reply_text(commands, parse_mode='Markdown')
-
-	elif text == '>cookbook':
-		update.message.reply_text(cookbook, parse_mode='Markdown')
 
 	elif ', not ' in text:
 		drake(bot, update, textn[text.find(', not ') + 6:], textn[:text.find(', not ')])
 
 	elif (update.message.reply_to_message and 'needs' in text and 'jpeg' in text):
+		if 'much' in text:
+			jpeg(bot, update, m=3)
 		if 'moar' in text:
 			jpeg(bot, update, m=2)
 		elif 'more' in text:
@@ -228,12 +219,27 @@ def process(bot, update):
 	elif 'what the' in text:
 		bot.send_photo(chat_id, photo='AgADBQADFagxG64JuVRzEubuAAHg69qMTdUyAAT2Cn1ZV-2hZNOKAwABAg')
 
-	elif 'nigga' in text:
-		update.message.reply_text(
-			' '.join(
-				['🅱️' + x[1:] if x[0].lower() in cons else x for x in textn.split(' ')]
-			).replace('g', '🅱️').replace('G', '🅱️')
-		)
+	elif 'nigga' in text or '🅱️' in text:
+		a = []
+		for x in text.split(' '):
+			if x == 'nigga':
+				a.append('ni🅱️🅱️a')
+				continue
+			if x in exbuded:
+				a.append(x)
+				continue
+			i = 0
+			try:
+				while x[i] not in cons:
+					i += 1
+				s, i = i, i + 1
+				while x[i] in cons:
+					i += 1
+				e = i
+				a.append(x[:s] + '🅱️' + x[e:])
+			except IndexError:
+				a.append(x)
+		update.message.reply_text(' '.join(a))
 
 	elif text == 'f' or text == 'rip':
 		update.message.reply_text('F')
@@ -274,12 +280,22 @@ def process(bot, update):
 		update.message.reply_text('ヽ(◉◡◔)ﾉ  i\'M jAiNiL aNd I iS aUtIsTiC. ヽ(◉◡◔)ﾉ')
 
 	else:
-		print(update.message.text)
+		if update.message.chat.type == 'group':
+			print('(%s) %s: %s' % (
+				update.message.chat.title,
+				update.message.from_user.first_name,
+				update.message.text
+			))
+		else:
+			print('%s: %s' % (
+				update.message.from_user.first_name,
+				update.message.text
+			))
 
 
-start_handler = CommandHandler('start', start)
-message_handler = MessageHandler(Filters.text, process)
-dispatcher.add_handler(start_handler)
-dispatcher.add_handler(message_handler)
+dispatcher.add_handler(CommandHandler('start', start_handler))
+dispatcher.add_handler(CommandHandler('help', help_handler))
+dispatcher.add_handler(CommandHandler('cookbook', cookbook_handler))
+dispatcher.add_handler(MessageHandler(Filters.text, process))
 
 updater.start_polling()
