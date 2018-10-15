@@ -44,10 +44,10 @@ commands = '''
 
 3. Alexa / Dankbot play Despacito
 	Sends a GIF of the Despacito music video along with an audio file of bass boosted Despacito.
-	The audio file has a 10% chance of being extremely bass bossted.
+	The audio file has a 10% chance of being extremely bass boosted.
 
 
-Use */commands* to print all commands and */cookbook* for frying help.
+Use */help* to print all commands and */cookbook* for frying help.
 '''
 cookbook = '''
 *Deep Fryer*
@@ -76,7 +76,7 @@ Also note that emojis and bulges are disabled by default for GIFs/Videos.
 User No-fat/High-fat and Light/Heavy to enable them as needed.
 
 
-Use */commands* to print all commands and */cookbook* for frying help.
+Use */help* to print all commands and */cookbook* for frying help.
 '''
 keys = ['shallow', 'deep', 'no-fat', 'low-fat', 'high-fat', 'light', 'heavy']
 cons = 'bcdfghjklmnpqrstvwxyz'
