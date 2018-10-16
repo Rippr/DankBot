@@ -19,20 +19,13 @@ from telegram.ext.dispatcher import run_async
 
 @run_async
 def fry_image(update, url, n, args):
-	if n == 0:
-		return
-
 	e = 3 if args['high-fat'] else 1 if args['low-fat'] else 0 if args['no-fat'] else 2
 	b = 0.75 if args['heavy'] else 0 if args['light'] else 0.45
 	m = 4 if args['deep'] else 1 if args['shallow'] else 2
 	name = update.message.from_user.first_name
 
 	bio = BytesIO()
-	bio.name = filename = '%s_%s_%s.png' % (
-		update.message.chat_id,
-		name,
-		update.message.message_id
-	)
+	bio.name = filename = '%s_%s_%s.png' % (update.message.chat_id, name, update.message.message_id)
 	caption = "Requested by %s, %d Cycle(s)" % (name, n)
 
 	success, img = __get_image(url)
@@ -54,19 +47,13 @@ def fry_image(update, url, n, args):
 
 @run_async
 def fry_gif(update, url, n, args):
-	if n == 0:
-		return
 	e = 1.5 if args['high-fat'] else 1 if args['low-fat'] else 0
 	b = 0.3 if args['heavy'] else 0.15 if args['light'] else 0
 	m = 4 if args['deep'] else 1 if args['shallow'] else 2
 	name = update.message.from_user.first_name
 
 	gifbio = BytesIO()
-	filename = '%s_%s_%s' % (
-		update.message.chat_id,
-		name,
-		update.message.message_id
-	)
+	filename = '%s_%s_%s' % (update.message.chat_id, name, update.message.message_id)
 	filepath = 'temp/' + filename
 	gifbio.name = filename + '.gif'
 	caption = "Requested by %s, %d Cycle(s)" % (name, n)

@@ -144,11 +144,6 @@ def reply_handler(bot, update):
 			fry_gif(update, url, n, args)
 			return
 
-		# elif update.message.reply_to_message.sticker:
-		# 	url = bot.get_file(update.message.reply_to_message.sticker.file_id).file_path
-		# 	fry_image(bot, chat_id, url, name, message_id, n, args)
-		# 	return 1
-
 		elif update.message.reply_to_message.photo:
 			url = bot.get_file(update.message.reply_to_message.photo[::-1][0].file_id).file_path
 			fry_image(update, url, n, args)
@@ -179,7 +174,6 @@ def reply_handler(bot, update):
 def main_handler(bot, update):
 	textn = update.message.text
 	text = textn.lower()
-	# chat_id = update.message.chat_id
 
 	if ', not ' in text:
 		drake(update, textn[text.find(', not ') + 6:], textn[:text.find(', not ')])
@@ -285,17 +279,11 @@ def main_handler(bot, update):
 		update.message.reply_text('ヽ(◉◡◔)ﾉ  i\'M jAiNiL aNd I iS aUtIsTiC. ヽ(◉◡◔)ﾉ')
 
 	else:
-		if update.message.chat.type == 'group':
-			print('(%s) %s: %s' % (
-				update.message.chat.title,
-				update.message.from_user.first_name,
-				update.message.text
-			))
-		else:
-			print('%s: %s' % (
-				update.message.from_user.first_name,
-				update.message.text
-			))
+			print(
+				'(%s) %s: %s' % (update.message.chat.title, update.message.from_user.first_name, textn)
+				if update.message.chat.type == 'group' else
+				'%s: %s' % (update.message.from_user.first_name, textn)
+			)
 
 
 dispatcher.add_handler(CommandHandler('start', start_handler))
