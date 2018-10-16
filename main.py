@@ -291,6 +291,6 @@ dispatcher.add_handler(CommandHandler('help', help_handler))
 dispatcher.add_handler(CommandHandler('cookbook', cookbook_handler))
 dispatcher.add_handler(MessageHandler(Filters.reply, reply_handler))
 dispatcher.add_handler(MessageHandler(Filters.text, main_handler))
-dispatcher.add_handler(MessageHandler(Filters.all, lambda bot, update: print(update.message)))
+# dispatcher.add_handler(MessageHandler(Filters.all, lambda bot, update: print(update.message)))
 
 updater.start_polling()
