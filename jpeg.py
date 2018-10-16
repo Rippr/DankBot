@@ -8,21 +8,19 @@ from telegram.ext import run_async
 
 
 @run_async
-def jpeg(bot, update, n=2, m=1):
+def jpeg(update, url, n=2, m=1):
 	bio = BytesIO()
 	bio.name = 'test.png'
 
 	for _ in range(5):
 		try:
-			url = bot.get_file(update.message.reply_to_message.photo[::-1][0].file_id).file_path
 			img = Image.open(BytesIO(urlopen(url).read()))
 			for _ in range(m):
 				w, h = img.size
 				img = img.resize((int(w / n) if int(w / n) else 1, int(h / n) if int(h / n) else 1), Image.NEAREST)
 			img.save(bio, 'PNG')
 			bio.seek(0)
-			bot.send_photo(
-				update.message.chat_id,
+			update.message.reply_photo(
 				photo=bio,
 				caption="Requested by %s, %d Cycle(s) of x%d Compression" % (update.message.from_user.first_name, m, n)
 			)

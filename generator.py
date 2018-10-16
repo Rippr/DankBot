@@ -13,7 +13,7 @@ s1 = ImageFont.truetype(font_path, 1)
 
 
 @run_async
-def generate(bot, update, t: str, b: str):
+def generate(update, url, t: str, b: str):
 	t = t.replace('\n', '')
 	b = b.replace('\n', '')
 	bio = BytesIO()
@@ -21,7 +21,6 @@ def generate(bot, update, t: str, b: str):
 
 	for _ in range(5):
 		try:
-			url = bot.get_file(update.message.reply_to_message.photo[::-1][0].file_id).file_path
 			img = Image.open(BytesIO(urlopen(url).read()))
 			draw = ImageDraw.Draw(img)
 			w, h = img.width, img.height
@@ -31,7 +30,7 @@ def generate(bot, update, t: str, b: str):
 			if __draw_top(draw, lt, w, h, st) and __draw_bottom(draw, lb, w, h, sb):
 				img.save(bio, 'PNG')
 				bio.seek(0)
-				bot.send_photo(
+				update.message.reply_photo(
 					update.message.chat_id,
 					photo=bio,
 					caption="Requested by %s" % update.message.from_user.first_name

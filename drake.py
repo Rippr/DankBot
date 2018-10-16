@@ -10,7 +10,7 @@ font = ImageFont.truetype(join(dirname(__file__), 'Resources/raleway.ttf'), 32)
 
 
 @run_async
-def drake(bot, update, a, b):
+def drake(update, a, b):
 	m = (
 		("Drake", 'AgADBQADSqgxG389uVR-bHcoBwTVCS6b1jIABJJj5XBpGQAB92oPAgABAg'),
 		("Drake", 'AgADBQADSqgxG389uVR-bHcoBwTVCS6b1jIABJJj5XBpGQAB92oPAgABAg'),
@@ -26,9 +26,9 @@ def drake(bot, update, a, b):
 	if __draw_text(draw, a, 129) and __draw_text(draw, b, 387):
 		img.save(bio, 'PNG')
 		bio.seek(0)
-		bot.send_photo(update.message.chat_id, photo=bio)
+		update.message.reply_photo(photo=bio)
 		return
-	bot.send_photo(update.message.chat_id, photo=m[1])
+	update.message.reply_photo(photo=m[1])
 
 
 @jit(fastmath=True)

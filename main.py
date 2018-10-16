@@ -95,25 +95,32 @@ nein = [
 	'CgADBAADZ6UAAsYeZAetCRQPjvgluwI',
 	'CgADBAADeQwAAogaZAeD6-H9IcSaswI'
 ]
-exbuded = ['a', 'an', 'and', 'if', 'the']
+wut = [
+	'AgADBQADRqgxG389uVR8GFE_Qj2BeeVC1jIABJIP9HL4D6o0uI8DAAEC',
+	'AgADBQADE6gxGyOkIFbed8kggNlVrg9m2zIABHSNs_wtRkJAA2UAAgI',
+	'AgADBQADFKgxGyOkIFYEvB40ArE8y0Ji2zIABLXKY5s3F2UkFWQAAgI',
+	'AgADBQADZ6gxG0uLKVYZ-d7qyUcW-26j1jIABJRPBU5rooV21gwDAAEC'
+]
+exbuded = ['a', 'an', 'and', 'are', 'if', 'the']
 
 
 @run_async
 def start_handler(bot, update):
-	bot.send_message(chat_id=update.message.chat_id, parse_mode='Markdown', text='*This is RipprBot!*\n' + commands)
+	update.message.reply_markdown(text='*This is RipprBot!*\n' + commands)
 
 
 @run_async
 def help_handler(bot, update):
-	bot.send_message(chat_id=update.message.chat_id, parse_mode='Markdown', text=commands)
+	update.message.reply_markdown(text=commands)
 
 
 @run_async
 def cookbook_handler(bot, update):
-	bot.send_message(chat_id=update.message.chat_id, parse_mode='Markdown', text=cookbook)
+	update.message.reply_markdown(text=cookbook)
 
 
-def handle_reply(bot, update):
+@run_async
+def reply_handler(bot, update):
 	textn = update.message.text
 	text = textn.lower()
 	name = update.message.from_user.first_name
@@ -129,13 +136,13 @@ def handle_reply(bot, update):
 		args = {key: 1 if key in text else 0 for key in keys}
 		if update.message.reply_to_message.document:
 			url = bot.get_file(update.message.reply_to_message.document.file_id).file_path
-			fry_gif(bot, chat_id, url, name, message_id, n, args)
-			return 1
+			fry_gif(update, url, n, args)
+			return
 
 		elif update.message.reply_to_message.video:
 			url = bot.get_file(update.message.reply_to_message.video.file_id).file_path
-			fry_gif(bot, chat_id, url, name, message_id, n, args)
-			return 1
+			fry_gif(update, url, n, args)
+			return
 
 		# elif update.message.reply_to_message.sticker:
 		# 	url = bot.get_file(update.message.reply_to_message.sticker.file_id).file_path
@@ -144,80 +151,78 @@ def handle_reply(bot, update):
 
 		elif update.message.reply_to_message.photo:
 			url = bot.get_file(update.message.reply_to_message.photo[::-1][0].file_id).file_path
-			fry_image(bot, chat_id, url, name, message_id, n, args)
-			return 1
+			fry_image(update, url, n, args)
+			return
 
 	elif ('t:' in text or 'ts:' in text) and ('b:' in text or 'bs:' in text):
 		t, tc = (text.find('t:'), 1) if 't:' in text else (text.find('ts:'), 0)
 		b, bc = (text.find('b:'), 1) if 'b:' in text else (text.find('bs:'), 0)
+		url = bot.get_file(update.message.reply_to_message.photo[::-1][0].file_id).file_path
 
 		if b > t:
 			generate(
-				bot, update,
+				update, url,
 				textn[t + 2:b].upper() if tc else textn[t + 3:b],
 				textn[b + 2:].upper() if bc else textn[b + 3:]
 			)
 		else:
 			generate(
-				bot, update,
+				update, url,
 				textn[t + 2:].upper() if tc else textn[t + 3:],
 				textn[b + 2:t].upper() if bc else textn[b + 3:t]
 			)
-		return 1
-	return 0
+		return
+	main_handler(bot, update)
 
 
 @run_async
-def process(bot, update):
+def main_handler(bot, update):
 	textn = update.message.text
 	text = textn.lower()
-	chat_id = update.message.chat_id
+	# chat_id = update.message.chat_id
 
-	if update.message.reply_to_message:
-		if handle_reply(bot, update):
-			return
-
-	elif ', not ' in text:
-		drake(bot, update, textn[text.find(', not ') + 6:], textn[:text.find(', not ')])
+	if ', not ' in text:
+		drake(update, textn[text.find(', not ') + 6:], textn[:text.find(', not ')])
 
 	elif (update.message.reply_to_message and 'needs' in text and 'jpeg' in text):
+		url = bot.get_file(update.message.reply_to_message.photo[::-1][0].file_id).file_path
 		if 'much' in text:
-			jpeg(bot, update, m=3)
-		if 'moar' in text:
-			jpeg(bot, update, m=2)
+			jpeg(update, url, m=3)
+		elif 'moar' in text:
+			jpeg(update, url, m=2)
 		elif 'more' in text:
-			jpeg(bot, update, n=3)
+			jpeg(update, url, n=3)
 		else:
-			jpeg(bot, update)
+			jpeg(update, url)
 
 	elif 'vapourize:' in text:
 		vapourize(update, textn[text.find('vapourize:') + 10:])
 
 	elif 'alexa play despacito' in text or 'dankbot play despacito' in text:
-		bot.send_animation(chat_id, animation='CgADBAADnI4AAmQbZAdH9Tn08dZ_3QI')
+		update.message.reply_animation(animation='CgADBAADnI4AAmQbZAdH9Tn08dZ_3QI')
 		r = randint(0, 9)
 		if r:
-			bot.send_audio(chat_id, audio='CQADBQADKwADfz25VCqQqUxbbzAhAg')
+			update.message.reply_audio(audio='CQADBQADKwADfz25VCqQqUxbbzAhAg')
 		else:
-			bot.send_audio(chat_id, audio='CQADBQADLAADfz25VH7xA8whBn5dAg')
+			update.message.reply_audio(audio='CQADBQADLAADfz25VH7xA8whBn5dAg')
 
 	elif 'hmmm' in text:
-		bot.send_animation(chat_id, animation='CgADBAADCQAD3nJNU7_HSzR8J2dtAg')
+		update.message.reply_animation(animation='CgADBAADCQAD3nJNU7_HSzR8J2dtAg')
 
 	elif 'nein' in text:
-		bot.send_animation(chat_id, animation=nein[randint(0, len(nein) - 1)])
+		update.message.reply_animation(animation=nein[randint(0, len(nein) - 1)])
 
 	elif 'damnnnn' in text:
-		bot.send_animation(chat_id, animation='CgADBAADR4YAApccZAczUrsyn-rCxwI')
+		update.message.reply_animation(animation='CgADBAADR4YAApccZAczUrsyn-rCxwI')
 
 	elif 'allah hu akbar' in text:
-		bot.send_animation(chat_id, animation='CgADBAADBwMAAsYeZAdmUu3cTHKhGwI')
+		update.message.reply_animation(animation='CgADBAADBwMAAsYeZAdmUu3cTHKhGwI')
 
 	elif 'do it' in text:
-		bot.send_animation(chat_id, animation='CgADBAADgAMAAi4ZZAd8XBGfHNdnhQI')
+		update.message.reply_animation(animation='CgADBAADgAMAAi4ZZAd8XBGfHNdnhQI')
 
 	elif 'what the' in text:
-		bot.send_photo(chat_id, photo='AgADBQADFagxG64JuVRzEubuAAHg69qMTdUyAAT2Cn1ZV-2hZNOKAwABAg')
+		update.message.reply_photo(photo='AgADBQADFagxG64JuVRzEubuAAHg69qMTdUyAAT2Cn1ZV-2hZNOKAwABAg')
 
 	elif 'nigga' in text or '🅱️' in text:
 		a = []
@@ -245,25 +250,25 @@ def process(bot, update):
 		update.message.reply_text('F')
 
 	elif text == 'e':
-		bot.send_photo(chat_id, photo='AgADBQADSagxG389uVRUovuo9tiKqXcx1TIABKmTrdCdaEhPGJcDAAEC')
+		update.message.reply_photo(photo='AgADBQADSagxG389uVRUovuo9tiKqXcx1TIABKmTrdCdaEhPGJcDAAEC')
 
 	elif text == '???':
 		update.message.reply_text('Profit')
 
 	elif 'hello there' in text:
-		bot.send_photo(chat_id, photo='AgADBQADFqgxG64JuVTQ1tqZIfI0TDud1jIABGS5QBh2gsTA9BcCAAEC')
+		update.message.reply_photo(photo='AgADBQADFqgxG64JuVTQ1tqZIfI0TDud1jIABGS5QBh2gsTA9BcCAAEC')
 
 	elif 'i don\'t think so' in text or 'i dont think so' in text:
-		bot.send_photo(chat_id, photo='AgADBQADF6gxG64JuVRIBsd4VngPrJ811TIABLOsd7lIp3ZiLpcDAAEC')
+		update.message.reply_photo(photo='AgADBQADF6gxG64JuVRIBsd4VngPrJ811TIABLOsd7lIp3ZiLpcDAAEC')
 
-	elif 'brah wut' in text:
-		bot.send_photo(chat_id, photo='AgADBQADRqgxG389uVR8GFE_Qj2BeeVC1jIABJIP9HL4D6o0uI8DAAEC')
+	elif 'wut' in text or 'dude what' in text or 'what even' in text:
+		update.message.reply_photo(photo=wut[randint(0, len(wut) - 1)])
 
 	elif 'miss me with that gay shit' in text or 'thats gay' in text or 'that\'s gay' in text:
-		bot.send_photo(chat_id, photo='AgADBQADR6gxG389uVT3fIg296WSGNoq1TIABOE4WXAwEZLBxpYDAAEC')
+		update.message.reply_photo(photo='AgADBQADR6gxG389uVT3fIg296WSGNoq1TIABOE4WXAwEZLBxpYDAAEC')
 
 	elif 'trollface.jpg' in text:
-		bot.send_photo(chat_id, photo='AgADBQADSKgxG389uVTjpi_5Hditdo5C1jIABHUAAb4etY0ouyWIAwABAg')
+		update.message.reply_photo(photo='AgADBQADSKgxG389uVTjpi_5Hditdo5C1jIABHUAAb4etY0ouyWIAwABAg')
 
 	elif 'ironic' in text or 'darth plagueis' in text:
 		update.message.reply_text(ironic)
@@ -296,6 +301,8 @@ def process(bot, update):
 dispatcher.add_handler(CommandHandler('start', start_handler))
 dispatcher.add_handler(CommandHandler('help', help_handler))
 dispatcher.add_handler(CommandHandler('cookbook', cookbook_handler))
-dispatcher.add_handler(MessageHandler(Filters.text, process))
+dispatcher.add_handler(MessageHandler(Filters.reply, reply_handler))
+dispatcher.add_handler(MessageHandler(Filters.text, main_handler))
+dispatcher.add_handler(MessageHandler(Filters.all, lambda bot, update: print(update.message)))
 
 updater.start_polling()
