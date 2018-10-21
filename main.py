@@ -16,23 +16,25 @@ updater = Updater(
 )
 dispatcher = updater.dispatcher
 
+# Misc. Constants
 commands = '''
 *Basic Commands*
- 1. Hmmmm
- 2. Nein
- 3. Damnnnn
- 4. Allah hu Akbar
- 5. Do it
- 6. What the
- 7. Nigga
- 8. F / RIP
- 9. E
-10. ???
+ 1. Hmmm
+ 2. Allah hu Akbar
+ 3. Do it
+ 4. Nein
+ 5. Damnnn
+ 6. Ironic
+ 7. F / RIP
+ 8. ???
+ 9. Nigga
+10. E
 11. Hello there
 12. I don't think so
-13. Brah wut
-14. Miss me with that gay shit / That's gay
-15. trollface.jpg
+13. Wut / Dude what / What even
+14. What the
+15. Miss me with that gay shit
+16. Trollface.jpg
 
 *Advanced Commands*
 
@@ -60,7 +62,7 @@ To invoke, reply to a message containing an image, GIF, or video using one of th
 	c) Allah hu Akbar: 5 cycles of frying.
 	d) Tsar Bomba: 10 cycles of frying.
 
-	Additional commands (Include in the same message):
+	Additional parameters (Include in the same message):
 
 	a) Deep: High contrast and saturation increase.
 	b) Shallow: Low contrast and saturation increase.
@@ -73,7 +75,7 @@ To invoke, reply to a message containing an image, GIF, or video using one of th
 	g) Light: No bulges are added.
 
 Also note that emojis and bulges are disabled by default for GIFs/Videos.
-User No-fat/High-fat and Light/Heavy to enable them as needed.
+Use No-/Low-/High- fat and Light/Heavy to enable them as needed.
 
 
 Use */help* to print all commands and */cookbook* for frying help.
@@ -91,17 +93,30 @@ The only thing he was afraid of was losing his power, which eventually, of cours
 Unfortunately, he taught his apprentice everything he knew, then his apprentice killed him in his sleep.
 Ironic. He could save others from death, but not himself.
 '''.replace('\n', ' ')
+exbuded = ['a', 'an', 'and', 'are', 'if', 'the']
+
+# File IDs - GIFs
+hmmm = ['CgADBAADCQAD3nJNU7_HSzR8J2dtAg']
+allah_hu_akbar = [
+	'CgADBQADMgADUJppVmeCJNTNloNqAg',
+	'CgADBAADBwMAAsYeZAdmUu3cTHKhGwI'
+]
+do_it = ['CgADBAADgAMAAi4ZZAd8XBGfHNdnhQI']
 nein = [
 	'CgADBAADZ6UAAsYeZAetCRQPjvgluwI',
 	'CgADBAADeQwAAogaZAeD6-H9IcSaswI'
 ]
+damnnn = ['CgADBAADR4YAApccZAczUrsyn-rCxwI']
+
+# File IDs - Images
 wut = [
 	'AgADBQADRqgxG389uVR8GFE_Qj2BeeVC1jIABJIP9HL4D6o0uI8DAAEC',
 	'AgADBQADE6gxGyOkIFbed8kggNlVrg9m2zIABHSNs_wtRkJAA2UAAgI',
 	'AgADBQADFKgxGyOkIFYEvB40ArE8y0Ji2zIABLXKY5s3F2UkFWQAAgI',
 	'AgADBQADZ6gxG0uLKVYZ-d7qyUcW-26j1jIABJRPBU5rooV21gwDAAEC'
 ]
-exbuded = ['a', 'an', 'and', 'are', 'if', 'the']
+what_the = ['AgADBQADFagxG64JuVRzEubuAAHg69qMTdUyAAT2Cn1ZV-2hZNOKAwABAg']
+miss_me = ['AgADBQADR6gxG389uVT3fIg296WSGNoq1TIABOE4WXAwEZLBxpYDAAEC']
 
 
 @run_async
@@ -201,22 +216,28 @@ def main_handler(bot, update):
 			update.message.reply_audio(audio='CQADBQADLAADfz25VH7xA8whBn5dAg')
 
 	elif 'hmmm' in text:
-		update.message.reply_animation(animation='CgADBAADCQAD3nJNU7_HSzR8J2dtAg')
+		update.message.reply_animation(animation=hmmm[randint(0, len(hmmm) - 1)])
+
+	elif 'allah hu akbar' in text:
+		update.message.reply_animation(animation=allah_hu_akbar[randint(0, len(allah_hu_akbar) - 1)])
+
+	elif 'do it' in text:
+		update.message.reply_animation(animation=do_it[randint(0, len(do_it) - 1)])
 
 	elif 'nein' in text:
 		update.message.reply_animation(animation=nein[randint(0, len(nein) - 1)])
 
-	elif 'damnnnn' in text:
-		update.message.reply_animation(animation='CgADBAADR4YAApccZAczUrsyn-rCxwI')
+	elif 'damnnn' in text:
+		update.message.reply_animation(animation=damnnn[randint(0, len(damnnn) - 1)])
 
-	elif 'allah hu akbar' in text:
-		update.message.reply_animation(animation='CgADBAADBwMAAsYeZAdmUu3cTHKhGwI')
+	elif 'ironic' in text or 'darth plagueis' in text:
+		update.message.reply_text(ironic)
 
-	elif 'do it' in text:
-		update.message.reply_animation(animation='CgADBAADgAMAAi4ZZAd8XBGfHNdnhQI')
+	elif text == 'f' or text == 'rip':
+		update.message.reply_text('F')
 
-	elif 'what the' in text:
-		update.message.reply_photo(photo='AgADBQADFagxG64JuVRzEubuAAHg69qMTdUyAAT2Cn1ZV-2hZNOKAwABAg')
+	elif text == '???':
+		update.message.reply_text('Profit')
 
 	elif 'nigga' in text or '🅱️' in text:
 		a = []
@@ -240,14 +261,8 @@ def main_handler(bot, update):
 				a.append(x)
 		update.message.reply_text(' '.join(a))
 
-	elif text == 'f' or text == 'rip':
-		update.message.reply_text('F')
-
 	elif text == 'e':
 		update.message.reply_photo(photo='AgADBQADSagxG389uVRUovuo9tiKqXcx1TIABKmTrdCdaEhPGJcDAAEC')
-
-	elif text == '???':
-		update.message.reply_text('Profit')
 
 	elif 'hello there' in text:
 		update.message.reply_photo(photo='AgADBQADFqgxG64JuVTQ1tqZIfI0TDud1jIABGS5QBh2gsTA9BcCAAEC')
@@ -258,14 +273,14 @@ def main_handler(bot, update):
 	elif 'wut' in text or 'dude what' in text or 'what even' in text:
 		update.message.reply_photo(photo=wut[randint(0, len(wut) - 1)])
 
+	elif 'what the' in text:
+		update.message.reply_photo(photo=what_the[randint(0, len(what_the) - 1)])
+
 	elif 'miss me with that gay shit' in text or 'thats gay' in text or 'that\'s gay' in text:
-		update.message.reply_photo(photo='AgADBQADR6gxG389uVT3fIg296WSGNoq1TIABOE4WXAwEZLBxpYDAAEC')
+		update.message.reply_photo(photo=miss_me[randint(0, len(miss_me) - 1)])
 
 	elif 'trollface.jpg' in text:
 		update.message.reply_photo(photo='AgADBQADSKgxG389uVTjpi_5Hditdo5C1jIABHUAAb4etY0ouyWIAwABAg')
-
-	elif 'ironic' in text or 'darth plagueis' in text:
-		update.message.reply_text(ironic)
 
 	elif 'thought' in text and 'process' in text:
 		update.message.reply_text('thoughtprocessors.herokuapp.com')
@@ -279,11 +294,11 @@ def main_handler(bot, update):
 		update.message.reply_text('ヽ(◉◡◔)ﾉ  i\'M jAiNiL aNd I iS aUtIsTiC. ヽ(◉◡◔)ﾉ')
 
 	else:
-			print(
-				'(%s) %s: %s' % (update.message.chat.title, update.message.from_user.first_name, textn)
-				if update.message.chat.type == 'group' else
-				'%s: %s' % (update.message.from_user.first_name, textn)
-			)
+		print(
+			'(%s) %s: %s' % (update.message.chat.title, update.message.from_user.first_name, textn)
+			if update.message.chat.type == 'group' else
+			'%s: %s' % (update.message.from_user.first_name, textn)
+		)
 
 
 dispatcher.add_handler(CommandHandler('start', start_handler))
