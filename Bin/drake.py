@@ -1,12 +1,13 @@
 from io import BytesIO
-from os.path import join, dirname
+from os.path import abspath, split as path_split
 from random import randint
 
 from PIL import Image, ImageDraw, ImageFont
 from numba import jit
 from telegram.ext.dispatcher import run_async
 
-font = ImageFont.truetype(join(dirname(__file__), 'Resources/raleway.ttf'), 32)
+bin_path = path_split(abspath(__file__))[0]
+font = ImageFont.truetype(bin_path + '/Resources/raleway.ttf', 32)
 
 
 @run_async
@@ -20,7 +21,7 @@ def drake(update, a, b):
 
 	bio = BytesIO()
 	bio.name = 'test.png'
-	img = Image.open('Drake/%s.png' % m[0])
+	img = Image.open(bin_path + '/Drake/%s.png' % m[0])
 	draw = ImageDraw.Draw(img)
 
 	if __draw_text(draw, a, 129) and __draw_text(draw, b, 387):

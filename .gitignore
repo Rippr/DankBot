@@ -1,10 +1,10 @@
 # Folders to ignore
 Archive/
-temp/
+Bin/temp/*
 
 
 # Files to ignore
-!temp/humans.txt
+!Bin/temp/humans.txt
 
 
 # File types to ignore

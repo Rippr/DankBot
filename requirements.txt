@@ -5,4 +5,6 @@ numpy
 opencv-python
 pillow
 pyimgur
+python-dotenv
 python-telegram-bot
+tqdm

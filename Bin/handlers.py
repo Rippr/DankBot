@@ -1,20 +1,12 @@
 from random import randint
 
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from telegram.ext.dispatcher import run_async
 
-from drake import drake
-from fryer import fry_image, fry_gif
-from generator import generate
-from jpeg import jpeg
-from vapourize import vapourize
-
-updater = Updater(
-	token='622347334:AAHDfULc5msN26uc-i9OZ4t98rtfySEfAgM',
-	workers=32,
-	request_kwargs={'read_timeout': 60, 'connect_timeout': 60}
-)
-dispatcher = updater.dispatcher
+from .drake import drake
+from .fryer import fry_image, fry_gif
+from .generator import generate
+from .jpeg import jpeg
+from .vapourize import vapourize
 
 # Misc. Constants
 commands = '''
@@ -299,13 +291,3 @@ def main_handler(bot, update):
 			if update.message.chat.type == 'group' else
 			'%s: %s' % (update.message.from_user.first_name, textn)
 		)
-
-
-dispatcher.add_handler(CommandHandler('start', start_handler))
-dispatcher.add_handler(CommandHandler('help', help_handler))
-dispatcher.add_handler(CommandHandler('cookbook', cookbook_handler))
-dispatcher.add_handler(MessageHandler(Filters.reply, reply_handler))
-dispatcher.add_handler(MessageHandler(Filters.text, main_handler))
-# dispatcher.add_handler(MessageHandler(Filters.all, lambda bot, update: print(update.message)))
-
-updater.start_polling()

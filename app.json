@@ -1,0 +1,12 @@
+{
+	"name": "DankBot",
+	"description": "Official DankBot on Telegram.",
+	"image": "heroku/python",
+	"repository": "https://git.heroku.com/dankbot-tg.git",
+	"keywords": [
+		"python",
+		"dankbot",
+		"bot",
+		"telegram"
+	]
+}

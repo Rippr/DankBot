@@ -1,6 +1,6 @@
 from io import BytesIO
-from os import remove
-from os.path import abspath, isfile
+from os import environ, remove
+from os.path import abspath, isfile, split as path_split
 from random import shuffle
 from time import sleep
 from urllib.error import HTTPError, URLError
@@ -14,7 +14,11 @@ from numba import jit
 from numpy import abs, arcsin, arctan, array, copy, pi, sin, sqrt, square, sum
 from numpy.random import normal, random
 from pyimgur import Imgur
+from tqdm import trange
 from telegram.ext.dispatcher import run_async
+
+
+bin_path = path_split(abspath(__file__))[0]
 
 
 @run_async
@@ -37,12 +41,11 @@ def fry_image(update, url, n, args):
 			shuffle(fs)
 			for f in fs:
 				img = f(img, m)
-
 		img.save(bio, 'PNG')
 		bio.seek(0)
 		update.message.reply_photo(photo=bio, caption=caption)
-		img.save('temp/' + filename, 'PNG')
-		__upload_to_imgur('temp/' + filename, caption)
+		img.save(bin_path + '/temp/' + filename, 'PNG')
+		__upload_to_imgur(bin_path + '/temp/' + filename, caption)
 
 
 @run_async
@@ -54,7 +57,7 @@ def fry_gif(update, url, n, args):
 
 	gifbio = BytesIO()
 	filename = '%s_%s_%s' % (update.message.chat_id, name, update.message.message_id)
-	filepath = 'temp/' + filename
+	filepath = bin_path + '/temp/' + filename
 	gifbio.name = filename + '.gif'
 	caption = "Requested by %s, %d Cycle(s)" % (name, n)
 
@@ -96,7 +99,9 @@ def __get_image(url):
 			return 1, Image.open(BytesIO(urlopen(url).read()))
 		except HTTPError or URLError:
 			sleep(1)
-		except OSError or UnboundLocalError or IndexError:
+		except OSError or UnboundLocalError or IndexError as e:
+			print("Error")
+			# print(e)
 			return 0, None
 	else:
 		return 0, None
@@ -109,9 +114,10 @@ def __get_gif_reader(url, filepath):
 			return 1, get_reader(filepath + '.mp4')
 		except HTTPError or URLError:
 			sleep(1)
-		except OSError or UnboundLocalError or IndexError:
-			print("Error")
-			return 0, None
+		# except OSError or UnboundLocalError or IndexError as e:
+		# 	print("Error")
+			# print(e)
+			# return 0, None
 	else:
 		print("Quitting loop")
 		return 0, None
@@ -169,8 +175,8 @@ def __find_chars(img):
 @jit(fastmath=True)
 def __find_eyes(img):
 	coords = []
-	face_cascade = CascadeClassifier('Classifiers/haarcascade_frontalface_default.xml')
-	eye_cascade = CascadeClassifier('Classifiers/haarcascade_eye.xml')
+	face_cascade = CascadeClassifier(bin_path + '/Classifiers/haarcascade_frontalface_default.xml')
+	eye_cascade = CascadeClassifier(bin_path + '/Classifiers/haarcascade_eye.xml')
 	gray = array(img.convert("L"))
 
 	faces = face_cascade.detectMultiScale(gray, 1.3, 5)
@@ -211,7 +217,7 @@ def __colorize(img, p):
 def __add_flares(img, coords):
 	tmp = img.copy()
 
-	flare = Image.open('Frying/lazer.png')
+	flare = Image.open(bin_path + '/Frying/lazer.png')
 	for coord in coords:
 		tmp.paste(flare, (int(coord[0] - flare.size[0] / 2), int(coord[1] - flare.size[1] / 2)), flare)
 
@@ -222,7 +228,7 @@ def __add_flares(img, coords):
 def __add_b(img, coords, c):
 	tmp = img.copy()
 
-	b = Image.open('Frying/B.png')
+	b = Image.open(bin_path + '/Frying/B.png')
 	for coord in coords:
 		if random(1)[0] < c:
 			resized = b.copy()
@@ -238,8 +244,8 @@ def __add_emojis(img, m):
 	tmp = img.copy()
 
 	for i in emojis:
-		emoji = Image.open('Frying/%s.png' % i)
-		for _ in range(int(random(1)[0] * m)):
+		emoji = Image.open(bin_path + '/Frying/%s.png' % i)
+		for _ in trange(int(random(1)[0] * m)):
 			coord = random(2) * array([img.width, img.height])
 			size = int((img.width / 10) * (random(1)[0] + 1)) + 1
 			theta = random(1)[0] * 360
@@ -347,10 +353,10 @@ def __add_bulge(img: Image.Image, f, r, a, h, ior):
 
 @run_async
 def __upload_to_imgur(path, caption):
-	client_id = 'ea567f3b9b802e5'
-	client_key = 'f7021fab37102191bb3c2ec00f6b9541d0be86a4'
-	access_token = 'f3fa0754bbd5f079938040834e4cf23d68fe7104'
-	refresh_token = 'bcb50c6b9f8ce1343774aed388951e6126633b60'
+	client_id = environ.get('IMGUR_CLIENT_ID')
+	client_key = environ.get('IMGUR_CLIENT_KEY')
+	access_token = environ.get('IMGUR_ACCESS_TOKEN')
+	refresh_token = environ.get('IMGUR_REFRESH_TOKEN')
 	im = Imgur(client_id, client_key)
 
 	if isfile(path):
@@ -360,7 +366,7 @@ def __upload_to_imgur(path, caption):
 				full_path = abspath(path)
 				im.access_token = access_token
 				im.refresh_token = refresh_token
-				im.upload_image(full_path, title=caption, album='pGXzpH0')
+				im.upload_image(full_path, title=caption, album=environ.get('IMGUR_ALBUM'))
 				remove(path)
 				return
 			except Exception:
