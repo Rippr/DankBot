@@ -14,7 +14,6 @@ from numba import jit
 from numpy import abs, arcsin, arctan, array, copy, pi, sin, sqrt, square, sum
 from numpy.random import normal, random
 from pyimgur import Imgur
-from tqdm import trange
 from telegram.ext.dispatcher import run_async
 
 
@@ -245,7 +244,7 @@ def __add_emojis(img, m):
 
 	for i in emojis:
 		emoji = Image.open(bin_path + '/Frying/%s.png' % i)
-		for _ in trange(int(random(1)[0] * m)):
+		for _ in range(int(random(1)[0] * m)):
 			coord = random(2) * array([img.width, img.height])
 			size = int((img.width / 10) * (random(1)[0] + 1)) + 1
 			theta = random(1)[0] * 360
