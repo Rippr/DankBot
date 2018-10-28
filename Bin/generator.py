@@ -1,5 +1,5 @@
 from io import BytesIO
-from os.path import join, dirname
+from os.path import abspath, split as path_split
 from time import sleep
 from urllib.error import HTTPError, URLError
 from urllib.request import urlopen
@@ -8,7 +8,7 @@ from PIL import Image, ImageDraw, ImageFont
 from numba import jit
 from telegram.ext.dispatcher import run_async
 
-font_path = join(dirname(__file__), 'Resources/impact.ttf')
+font_path = path_split(abspath(__file__))[0] + '/Resources/impact.ttf'
 s1 = ImageFont.truetype(font_path, 1)
 
 
