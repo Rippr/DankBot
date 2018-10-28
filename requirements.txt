@@ -7,4 +7,3 @@ pillow
 pyimgur
 python-dotenv
 python-telegram-bot
-tqdm
