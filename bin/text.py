@@ -38,7 +38,7 @@ Fries images, GIFs, or videos.
 This includes increasing saturation & contrast, and adding some noise, emojis, lazer eyes, and bulges.
 To invoke, reply to a message containing an image, GIF, or video using one of the following commands:
 
-	a) Fry: 1 cycle  of frying.
+	a) Fry: 1 cycle of frying.
 	b) Nuke: 3 cycles of frying.
 	c) Allah hu Akbar: 5 cycles of frying.
 	d) Tsar Bomba: 10 cycles of frying.
